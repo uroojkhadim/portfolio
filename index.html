@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Urooj Khadim | Portfolio Dashboard</title>
+    <!-- Fonts & Icons -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body data-theme="light">
+
+    <!-- Mobile Top Header (Visible only on Mobile/Tablet) -->
+    <header class="mobile-header">
+        <a href="#dashboard" class="mobile-logo">Urooj<span>.</span></a>
+        <div class="header-actions">
+            <button id="themeToggleMobile" class="theme-toggle" aria-label="Toggle Theme"><i class="fas fa-moon"></i></button>
+            <button class="hamburger-btn" id="sidebarToggle" aria-label="Toggle Sidebar"><i class="fas fa-bars"></i></button>
+        </div>
+    </header>
+
+    <!-- Sidebar / Desktop Navigation -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="profile-img-container">
+                <img src="images/profile picture/WhatsApp Image 2026-02-23 at 8.07.35 PM.jpeg" alt="Urooj Khadim" class="profile-img">
+            </div>
+            <h2 class="profile-name">Urooj Khadim</h2>
+            <p class="profile-title">Software Engineering Student</p>
+            <button id="themeToggleDesktop" class="theme-toggle desktop-only" aria-label="Toggle Theme"><i class="fas fa-moon"></i></button>
+        </div>
+
+        <nav class="sidebar-nav">
+            <ul class="nav-list">
+                <li class="nav-item">
+                    <a href="#dashboard" class="nav-link active" data-section="dashboard">
+                        <i class="fas fa-home"></i>
+                        <span>Dashboard</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#about" class="nav-link" data-section="about">
+                        <i class="fas fa-user-circle"></i>
+                        <span>About Me</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#skills" class="nav-link" data-section="skills">
+                        <i class="fas fa-tools"></i>
+                        <span>Skills</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#projects" class="nav-link" data-section="projects">
+                        <i class="fas fa-folder-open"></i>
+                        <span>Projects</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#contact" class="nav-link" data-section="contact">
+                        <i class="fas fa-envelope"></i>
+                        <span>Contact</span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+
+        <div class="sidebar-footer">
+            <a href="https://docs.google.com/document/d/1C94aSHvJ5xJ9vnrJj2JOtJhszOUujfot/edit?usp=drivesdk&ouid=109025669726259173347&rtpof=true&sd=true" class="btn btn-outline cv-btn" target="_blank">Download CV <i class="fas fa-download"></i></a>
+            <div class="social-links">
+                <a href="https://github.com/uroojkhadim" target="_blank" aria-label="GitHub"><i class="fab fa-github"></i></a>
+                <a href="https://www.linkedin.com/in/urooj-khadim-26a334364" target="_blank" aria-label="LinkedIn"><i class="fab fa-linkedin"></i></a>
+                <a href="mailto:uroojkhadim505@gmail.com" aria-label="Email"><i class="fas fa-at"></i></a>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Sidebar Backdrop for Tablet -->
+    <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+        
+        <!-- =================== DASHBOARD SECTION =================== -->
+        <section id="dashboard" class="content-section active">
+            <div class="dashboard-header fade-in">
+                <h1 class="page-title">Welcome back, Urooj! 👋</h1>
+                <p class="page-subtitle">Here is a quick overview of your portfolio.</p>
+            </div>
+
+            <div class="stats-grid fade-in" style="animation-delay: 0.1s;">
+                <div class="stat-card">
+                    <div class="stat-icon"><i class="fas fa-code-branch"></i></div>
+                    <div class="stat-info">
+                        <h3>10+</h3>
+                        <p>Projects Completed</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon"><i class="fas fa-laptop-code"></i></div>
+                    <div class="stat-info">
+                        <h3>5+</h3>
+                        <p>Core Technologies</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon"><i class="fas fa-user-graduate"></i></div>
+                    <div class="stat-info">
+                        <h3>BS</h3>
+                        <p>Software Engineering</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="dashboard-widgets fade-in" style="animation-delay: 0.2s;">
+                <div class="widget featured-projects">
+                    <div class="widget-header">
+                        <h2>Featured Projects</h2>
+                        <a href="#projects" class="view-all">View All <i class="fas fa-arrow-right"></i></a>
+                    </div>
+                    <!-- Will be populated by JS -->
+                    <div class="featured-grid" id="featuredProjectsGrid"></div>
+                </div>
+
+                <div class="widget recent-activity">
+                    <div class="widget-header">
+                        <h2>Current Focus</h2>
+                    </div>
+                    <div class="activity-timeline">
+                        <div class="activity-item">
+                            <i class="fas fa-mobile-alt activity-icon primary"></i>
+                            <div class="activity-content">
+                                <h4>Advanced Flutter Architecture</h4>
+                                <p>Studying state management and clean architecture for scalable mobile apps.</p>
+                            </div>
+                        </div>
+                        <div class="activity-item">
+                            <i class="fas fa-server activity-icon secondary"></i>
+                            <div class="activity-content">
+                                <h4>MERN Stack Mastery</h4>
+                                <p>Building robust RESTful APIs with Node.js and Express.</p>
+                            </div>
+                        </div>
+                        <div class="activity-item">
+                            <i class="fas fa-laptop activity-icon success"></i>
+                            <div class="activity-content">
+                                <h4>UI/UX Design Patterns</h4>
+                                <p>Implementing modern, accessible, and intuitive user interfaces.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- =================== ABOUT SECTION =================== -->
+        <section id="about" class="content-section">
+            <div class="dashboard-header">
+                <h1 class="page-title">About Me</h1>
+                <p class="page-subtitle">Get to know the developer behind the code.</p>
+            </div>
+
+            <div class="about-container fade-in">
+                <div class="about-profile-card">
+                    <div class="about-image">
+                        <img src="images/profile picture/WhatsApp Image 2026-02-23 at 8.07.35 PM.jpeg" alt="Urooj Khadim">
+                    </div>
+                    <h3>Urooj Khadim</h3>
+                    <p class="role">Full-Stack & Flutter Developer</p>
+                    <div class="about-contact-info">
+                        <div class="info-row"><i class="fas fa-envelope"></i> uroojkhadim505@gmail.com</div>
+                        <div class="info-row"><i class="fas fa-map-marker-alt"></i> Available for Remote</div>
+                    </div>
+                    <a href="https://docs.google.com/document/d/1C94aSHvJ5xJ9vnrJj2JOtJhszOUujfot/edit?usp=drivesdk&ouid=109025669726259173347&rtpof=true&sd=true" class="btn btn-primary" style="width: 100%;" target="_blank">Download Resume <i class="fas fa-download"></i></a>
+                </div>
+
+                <div class="about-details">
+                    <div class="content-card bio-card">
+                        <h2>Biography</h2>
+                        <p>I am a passionate Software Engineering student with a deep-rooted interest in building applications that prioritize user experience and technical efficiency. My journey in tech started with a curiosity for how things work, which quickly evolved into a drive to create things that matter.</p>
+                        <p>Throughout my studies, I have specialized in Flutter for mobile development and the MERN stack for web applications. I believe that good software isn't just about code; it's about solving problems and making lives easier through intuitive design and robust logic.</p>
+                        <p>My goal is to innovate in the HealthTech and E-commerce sectors by creating intelligent, scalable software solutions.</p>
+                    </div>
+
+                    <div class="content-card education-card">
+                        <h2><i class="fas fa-graduation-cap"></i> Education</h2>
+                        <div class="timeline">
+                            <div class="timeline-item">
+                                <div class="timeline-dot"></div>
+                                <div class="timeline-content">
+                                    <h3>BS Software Engineering</h3>
+                                    <span class="timeline-date">Current</span>
+                                    <p>Focusing on high-performance mobile apps, scalable web architectures, and software design principles.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="interests-grid">
+                        <div class="interest-tag"><i class="fas fa-paint-brush"></i> UI/UX Design</div>
+                        <div class="interest-tag"><i class="fas fa-gamepad"></i> Mobile Gaming</div>
+                        <div class="interest-tag"><i class="fas fa-brain"></i> AI Exploration</div>
+                        <div class="interest-tag"><i class="fas fa-users"></i> Community Building</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- =================== SKILLS SECTION =================== -->
+        <section id="skills" class="content-section">
+            <div class="dashboard-header">
+                <h1 class="page-title">Technical Skills</h1>
+                <p class="page-subtitle">The tools and technologies I use to build things.</p>
+            </div>
+
+            <div class="skills-layout fade-in">
+                <!-- Hard Skills (Bars) -->
+                <div class="hard-skills-container">
+                    
+                    <div class="skill-group-card">
+                        <h2 class="skill-group-title"><i class="fas fa-mobile-alt"></i> Mobile Development</h2>
+                        <div class="skill-bar-wrapper">
+                            <div class="skill-info"><span>Flutter</span><span class="skill-percentage">90%</span></div>
+                            <div class="progress-bg"><div class="progress-fill" data-width="90%"></div></div>
+                        </div>
+                        <div class="skill-bar-wrapper">
+                            <div class="skill-info"><span>React Native</span><span class="skill-percentage">70%</span></div>
+                            <div class="progress-bg"><div class="progress-fill" data-width="70%"></div></div>
+                        </div>
+                        <div class="skill-bar-wrapper">
+                            <div class="skill-info"><span>Dart</span><span class="skill-percentage">85%</span></div>
+                            <div class="progress-bg"><div class="progress-fill" data-width="85%"></div></div>
+                        </div>
+                    </div>
+
+                    <div class="skill-group-card">
+                        <h2 class="skill-group-title"><i class="fas fa-code"></i> Frontend (Web)</h2>
+                        <div class="skill-grid-labels">
+                            <span class="skill-label">HTML5</span>
+                            <span class="skill-label">CSS3</span>
+                            <span class="skill-label">JavaScript</span>
+                            <span class="skill-label">React</span>
+                        </div>
+                    </div>
+
+                    <div class="skill-group-card">
+                        <h2 class="skill-group-title"><i class="fas fa-server"></i> Backend & Database</h2>
+                        <div class="skill-bar-wrapper">
+                            <div class="skill-info"><span>Node.js / Express</span><span class="skill-percentage">75%</span></div>
+                            <div class="progress-bg"><div class="progress-fill" data-width="75%"></div></div>
+                        </div>
+                        <div class="skill-bar-wrapper">
+                            <div class="skill-info"><span>MongoDB</span><span class="skill-percentage">70%</span></div>
+                            <div class="progress-bg"><div class="progress-fill" data-width="70%"></div></div>
+                        </div>
+                        <div class="skill-bar-wrapper">
+                            <div class="skill-info"><span>MySQL / Postgres</span><span class="skill-percentage">65%</span></div>
+                            <div class="progress-bg"><div class="progress-fill" data-width="65%"></div></div>
+                        </div>
+                        <div class="skill-bar-wrapper">
+                            <div class="skill-info"><span>Python</span><span class="skill-percentage">60%</span></div>
+                            <div class="progress-bg"><div class="progress-fill" data-width="60%"></div></div>
+                        </div>
+                    </div>
+
+                    <div class="skill-group-card">
+                        <h2 class="skill-group-title"><i class="fas fa-tools"></i> Tools & Platforms</h2>
+                        <div class="skill-grid-labels">
+                            <span class="skill-label">Git (85%)</span>
+                            <span class="skill-label">GitHub (85%)</span>
+                            <span class="skill-label">Firebase (70%)</span>
+                            <span class="skill-label">Figma (65%)</span>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Soft Skills (Tags) -->
+                <div class="soft-skills-container">
+                    <div class="content-card">
+                        <h2>Professional Soft Skills</h2>
+                        <p class="soft-skills-desc">Beyond writing code, I value the communication and problem-solving skills necessary to work effectively in a team environment.</p>
+                        
+                        <div class="soft-tags-grid">
+                            <div class="soft-tag">
+                                <i class="fas fa-lightbulb"></i>
+                                <span>Problem Solving</span>
+                            </div>
+                            <div class="soft-tag">
+                                <i class="fas fa-users"></i>
+                                <span>Teamwork</span>
+                            </div>
+                            <div class="soft-tag">
+                                <i class="fas fa-comments"></i>
+                                <span>Communication</span>
+                            </div>
+                            <div class="soft-tag">
+                                <i class="fas fa-clock"></i>
+                                <span>Time Management</span>
+                            </div>
+                            <div class="soft-tag">
+                                <i class="fas fa-brain"></i>
+                                <span>Critical Thinking</span>
+                            </div>
+                            <div class="soft-tag">
+                                <i class="fas fa-sync-alt"></i>
+                                <span>Adaptability</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- =================== PROJECTS SECTION =================== -->
+        <section id="projects" class="content-section">
+            <div class="dashboard-header">
+                <h1 class="page-title">Project Gallery</h1>
+                <p class="page-subtitle">A showcase of my recent mobile and web applications.</p>
+            </div>
+
+            <div class="project-filters-container fade-in">
+                <div class="filter-tabs">
+                    <button class="filter-btn active" data-filter="all">All Projects</button>
+                    <button class="filter-btn" data-filter="Mobile App">Mobile Apps</button>
+                    <button class="filter-btn" data-filter="Web App">Web Apps</button>
+                    <button class="filter-btn" data-filter="Full Stack">Full Stack</button>
+                </div>
+                <!-- Optional Search inside dashboard
+                <div class="search-box dashboard-search">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="projectSearch" placeholder="Search projects...">
+                </div>
+                -->
+            </div>
+
+            <div class="projects-grid fade-in" id="projectsGrid">
+                <!-- Populated by script.js -->
+            </div>
+        </section>
+
+        <!-- =================== CONTACT SECTION =================== -->
+        <section id="contact" class="content-section">
+            <div class="dashboard-header">
+                <h1 class="page-title">Get In Touch</h1>
+                <p class="page-subtitle">Have a question or want to work together? Send me a message!</p>
+            </div>
+
+            <div class="contact-layout fade-in">
+                <!-- Form Box -->
+                <div class="contact-form-card content-card">
+                    <h2>Send a Message</h2>
+                    <form id="contactForm">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="name">Your Name</label>
+                                <div class="input-wrapper">
+                                    <i class="fas fa-user"></i>
+                                    <input type="text" id="name" placeholder="John Doe" required>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="email">Your Email</label>
+                                <div class="input-wrapper">
+                                    <i class="fas fa-envelope"></i>
+                                    <input type="email" id="email" placeholder="john@example.com" required>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="subject">Subject</label>
+                            <div class="input-wrapper">
+                                <i class="fas fa-tag"></i>
+                                <input type="text" id="subject" placeholder="Project Inquiry" required>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="message">Message</label>
+                            <textarea id="message" rows="5" placeholder="How can I help you?" required></textarea>
+                        </div>
+                        <div id="formStatus" class="form-status"></div>
+                        <button type="submit" class="btn btn-primary btn-submit">
+                            <span>Send Message</span> <i class="fas fa-paper-plane"></i>
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Info Box -->
+                <div class="contact-info-sidebar">
+                    <div class="info-card-item">
+                        <div class="icon-circle"><i class="fas fa-envelope"></i></div>
+                        <div class="info-content">
+                            <h3>Email Me</h3>
+                            <p>uroojkhadim505@gmail.com</p>
+                            <button class="btn-text copy-btn" id="copyEmailBtn"><i class="far fa-copy"></i> Copy Email</button>
+                        </div>
+                    </div>
+
+                    <div class="info-card-item">
+                        <div class="icon-circle"><i class="fab fa-linkedin-in"></i></div>
+                        <div class="info-content">
+                            <h3>LinkedIn</h3>
+                            <a href="https://www.linkedin.com/in/urooj-khadim-26a334364" target="_blank" class="link-styled">Connect on LinkedIn <i class="fas fa-external-link-alt"></i></a>
+                        </div>
+                    </div>
+
+                    <div class="info-card-item">
+                        <div class="icon-circle"><i class="fab fa-github"></i></div>
+                        <div class="info-content">
+                            <h3>GitHub</h3>
+                            <a href="https://github.com/uroojkhadim" target="_blank" class="link-styled">View my Repositories <i class="fas fa-external-link-alt"></i></a>
+                        </div>
+                    </div>
+
+                    <div class="status-card mt-auto">
+                        <div class="status-indicator online"></div>
+                        <span>Currently available for freelance & internships</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Project Detail Modal (Hidden by default) -->
+        <div class="modal-overlay" id="projectModal">
+            <div class="modal-container">
+                <button class="modal-close" id="closeModal"><i class="fas fa-times"></i></button>
+                <div class="modal-content" id="modalContent">
+                    <!-- Populated by script.js -->
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Mobile Bottom Navigation (Visible only on Mobile) -->
+    <nav class="mobile-bottom-nav">
+        <a href="#dashboard" class="mobile-nav-item active" data-section="dashboard">
+            <i class="fas fa-home"></i>
+            <span>Home</span>
+        </a>
+        <a href="#about" class="mobile-nav-item" data-section="about">
+            <i class="fas fa-user"></i>
+            <span>About</span>
+        </a>
+        <a href="#skills" class="mobile-nav-item" data-section="skills">
+            <i class="fas fa-tools"></i>
+            <span>Skills</span>
+        </a>
+        <a href="#projects" class="mobile-nav-item" data-section="projects">
+            <i class="fas fa-folder"></i>
+            <span>Projects</span>
+        </a>
+        <a href="#contact" class="mobile-nav-item" data-section="contact">
+            <i class="fas fa-envelope"></i>
+            <span>Contact</span>
+        </a>
+    </nav>
+    
+    <!-- Floating Action Button for CV on Mobile -->
+    <a href="https://docs.google.com/document/d/1C94aSHvJ5xJ9vnrJj2JOtJhszOUujfot/edit?usp=drivesdk&ouid=109025669726259173347&rtpof=true&sd=true" class="fab-mobile" target="_blank" aria-label="Download CV">
+        <i class="fas fa-download"></i>
+    </a>
+
+    <script src="projects-data.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
