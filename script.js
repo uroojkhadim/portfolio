@@ -7,6 +7,8 @@ document.addEventListener('DOMContentLoaded', () => {
     initSidebarToggle();
     initTheme();
     initProjectsGallery();
+    initBlogGallery();
+    initAchievementsGallery();
     initContactForm();
     initSkillsAnimationObserver();
 });
@@ -17,7 +19,7 @@ function initRouter() {
     let currentHash = window.location.hash || '#dashboard';
     
     // If somehow the hash isn't one of our sections, force #dashboard
-    const validRoutes = ['#dashboard', '#about', '#skills', '#projects', '#contact'];
+    const validRoutes = ['#dashboard', '#about', '#skills', '#projects', '#blog', '#achievements', '#contact'];
     if (!validRoutes.includes(currentHash)) {
         currentHash = '#dashboard';
         window.location.hash = currentHash;
@@ -203,6 +205,40 @@ function renderProjectCards(projects) {
                 <!-- Call Modal Function -->
                 <button onclick="openProjectModal('${p.id}')" class="btn btn-outline" style="width: 100%;">View Details</button>
             </div>
+        </div>
+    `).join('');
+}
+
+// ========== 4.5 Blog Gallery Rendering ==========
+function initBlogGallery() {
+    if (typeof blogData === 'undefined') return;
+
+    const blogGrid = document.getElementById('blogGrid');
+    if (!blogGrid) return;
+
+    blogGrid.innerHTML = blogData.map(article => `
+        <div class="blog-card">
+            <h3>${article.title}</h3>
+            <p>${article.description}</p>
+            <a href="${article.readMoreLink}" class="btn-blog">Read More <i class="fas fa-arrow-right"></i></a>
+        </div>
+    `).join('');
+}
+
+// ========== 4.7 Achievements Rendering ==========
+function initAchievementsGallery() {
+    if (typeof achievementsData === 'undefined') return;
+
+    const achievementsGrid = document.getElementById('achievementsGrid');
+    if (!achievementsGrid) return;
+
+    achievementsGrid.innerHTML = achievementsData.map(item => `
+        <div class="achievement-card">
+            <div class="achievement-icon">
+                <i class="${item.icon}"></i>
+            </div>
+            <h3>${item.title}</h3>
+            <p>${item.description}</p>
         </div>
     `).join('');
 }
