@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Menu, X, Moon, Sun } from 'lucide-react'
+import { Menu, X, Moon, Sun, Download } from 'lucide-react'
 import { personalInfo, navLinks } from '../../data/personal'
 import { useTheme } from '../../context/ThemeContext'
 import { useActiveSection, scrollToSection } from '../../hooks/useActiveSection'
@@ -76,6 +76,15 @@ export default function Navbar() {
           </ul>
 
           <div className="flex items-center gap-2">
+            <a
+              href={personalInfo.cvDownload}
+              download={personalInfo.cvFilename}
+              className="hidden items-center gap-1.5 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 px-3.5 py-2 text-sm font-semibold text-white shadow-md shadow-indigo-500/25 transition-all hover:brightness-110 sm:inline-flex"
+            >
+              <Download size={15} />
+              CV
+            </a>
+
             <button
               onClick={toggleTheme}
               className="rounded-xl p-2.5 text-slate-600 transition-colors hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
@@ -129,6 +138,14 @@ export default function Navbar() {
                   {link.label}
                 </motion.button>
               ))}
+              <a
+                href={personalInfo.cvDownload}
+                download={personalInfo.cvFilename}
+                className="mt-2 flex items-center gap-2 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 px-4 py-3 text-base font-medium text-white"
+              >
+                <Download size={18} />
+                Download CV
+              </a>
             </motion.div>
           </motion.div>
         )}

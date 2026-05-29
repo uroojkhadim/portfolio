@@ -1,3 +1,5 @@
+import { cvLinks } from './cv'
+
 export const personalInfo = {
   name: 'Urooj Khadim',
   title: 'Software Engineering Student',
@@ -8,7 +10,9 @@ export const personalInfo = {
   email: 'uroojkhadim505@gmail.com',
   github: 'https://github.com/uroojkhadim',
   linkedin: 'https://www.linkedin.com/in/urooj-khadim-26a334364',
-  cv: 'https://docs.google.com/document/d/1C94aSHvJ5xJ9vnrJj2JOtJhszOUujfot/edit?usp=drivesdk&ouid=109025669726259173347&rtpof=true&sd=true',
+  cv: cvLinks.path,
+  cvDownload: cvLinks.download,
+  cvFilename: cvLinks.filename,
   location: 'Available for Remote & Internships',
   profileImage: '/profile.png',
 }
@@ -19,5 +23,6 @@ export const navLinks = [
   { id: 'skills', label: 'Skills' },
   { id: 'projects', label: 'Projects' },
   { id: 'education', label: 'Education' },
+  { id: 'resume', label: 'Resume' },
   { id: 'contact', label: 'Contact' },
 ]

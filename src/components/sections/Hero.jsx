@@ -99,7 +99,7 @@ export default function Hero() {
               <Button variant="secondary" onClick={() => scrollToSection('contact')}>
                 Contact Me
               </Button>
-              <Button variant="outline" href={personalInfo.cv}>
+              <Button variant="outline" href={personalInfo.cvDownload} download={personalInfo.cvFilename}>
                 <Download size={16} />
                 Download CV
               </Button>
