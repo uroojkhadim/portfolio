@@ -1,0 +1,103 @@
+import {
+  Code2,
+  Server,
+  Database,
+  ShieldCheck,
+  Palette,
+  Search,
+  Wrench,
+} from 'lucide-react'
+
+export const skillCategories = [
+  {
+    id: 'frontend',
+    title: 'Frontend Development',
+    icon: Code2,
+    color: 'from-blue-500 to-indigo-500',
+    skills: [
+      { name: 'HTML', level: 90 },
+      { name: 'CSS', level: 88 },
+      { name: 'JavaScript', level: 85 },
+      { name: 'React', level: 82 },
+      { name: 'React Native', level: 75 },
+      { name: 'Flutter', level: 78 },
+    ],
+  },
+  {
+    id: 'backend',
+    title: 'Backend Development',
+    icon: Server,
+    color: 'from-violet-500 to-purple-500',
+    skills: [
+      { name: 'Node.js', level: 78 },
+      { name: 'Express.js', level: 75 },
+      { name: 'Laravel', level: 72 },
+      { name: 'PHP', level: 70 },
+    ],
+  },
+  {
+    id: 'database',
+    title: 'Database & Cloud',
+    icon: Database,
+    color: 'from-cyan-500 to-blue-500',
+    skills: [
+      { name: 'MongoDB', level: 72 },
+      { name: 'MySQL', level: 68 },
+      { name: 'Firebase', level: 80 },
+      { name: 'Supabase', level: 70 },
+    ],
+  },
+  {
+    id: 'sqe',
+    title: 'Software Engineering / SQE',
+    icon: ShieldCheck,
+    color: 'from-emerald-500 to-teal-500',
+    skills: [
+      { name: 'Software Quality Engineering', level: 75 },
+      { name: 'Manual Testing', level: 78 },
+      { name: 'Bug Reporting', level: 80 },
+      { name: 'Test Case Writing', level: 76 },
+      { name: 'Software Documentation', level: 82 },
+      { name: 'SDLC Basics', level: 78 },
+      { name: 'Debugging', level: 80 },
+    ],
+  },
+  {
+    id: 'design',
+    title: 'Design & Creative',
+    icon: Palette,
+    color: 'from-pink-500 to-rose-500',
+    skills: [
+      { name: 'Canva Editing', level: 85 },
+      { name: 'UI/UX Basics', level: 78 },
+      { name: 'Visual Content Design', level: 80 },
+    ],
+  },
+  {
+    id: 'research',
+    title: 'Research & Analysis',
+    icon: Search,
+    color: 'from-amber-500 to-orange-500',
+    skills: [
+      { name: 'Niche Research', level: 82 },
+      { name: 'Competitor Research', level: 80 },
+      { name: 'Requirement Analysis', level: 78 },
+      { name: 'Basic Market Research', level: 75 },
+    ],
+  },
+  {
+    id: 'tools',
+    title: 'Tools & Platforms',
+    icon: Wrench,
+    color: 'from-slate-500 to-zinc-600',
+    skills: [
+      { name: 'Git', level: 85 },
+      { name: 'GitHub', level: 88 },
+      { name: 'Firebase', level: 80 },
+      { name: 'Vercel', level: 82 },
+      { name: 'Netlify', level: 78 },
+      { name: 'Supabase', level: 72 },
+      { name: 'Backblaze B2 Cloud Storage', level: 68 },
+    ],
+  },
+]

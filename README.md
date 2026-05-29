@@ -1,47 +1,67 @@
-# Portfolio Website
+# Urooj Khadim — Developer Portfolio
 
-This is a modern, responsive portfolio website for showcasing projects, skills, and contact information. The website is designed to be visually appealing and user-friendly, with smooth scrolling and interactive elements.
+A modern, premium, fully responsive developer portfolio built with **React**, **Tailwind CSS**, and **Framer Motion**. Designed to be recruiter-friendly, internship-ready, and freelance-client ready.
 
 ## Features
 
-- **Hero Section**: A visually striking introduction with a profile picture, title, and call-to-action buttons.
-- **About Section**: A brief overview of the developer's background, education, and career goals.
-- **Skills Section**: A grid showcasing technical skills and technologies.
-- **Projects Section**: Featured projects with descriptions, technologies used, and links to live demos and code repositories.
-- **Contact Section**: Contact information with links to email, LinkedIn, and GitHub.
-- **Responsive Design**: Optimized for viewing on desktops, tablets, and mobile devices.
+- Premium glassmorphism UI with blue/purple gradients
+- Dark / light mode toggle with persistence
+- Sticky responsive navbar with active section highlighting
+- Smooth scroll navigation and subtle Framer Motion animations
+- Seven polished sections: Hero, About, Skills, Projects, Education, Contact, Footer
+- SEO-friendly meta tags and accessible markup
+- Only real deployed projects — no dummy placeholders
 
-## Technologies Used
+## Tech Stack
 
-- **HTML5**: For the structure of the website.
-- **CSS3**: For styling, including animations and responsive design.
-- **JavaScript**: For interactivity, such as smooth scrolling.
-- **Font Awesome**: For icons.
-- **Google Fonts**: For typography.
+- React 18 + Vite
+- Tailwind CSS 3
+- Framer Motion
+- Lucide React icons
 
-## How to Use
+## Getting Started
 
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/your-username/portfolio.git
-   ```
-2. Navigate to the project directory:
-   ```bash
-   cd portfolio
-   ```
-3. Open `index.html` in your browser to view the website.
+```bash
+# Install dependencies
+npm install
 
-## Folder Structure
+# Start development server
+npm run dev
+
+# Build for production
+npm run build
+
+# Preview production build
+npm run preview
+```
+
+## Project Structure
 
 ```
 portfolio/
-├── index.html       # Main HTML file
-├── style.css        # CSS file for styling
-├── script.js        # JavaScript file for interactivity
-├── images/          # Folder containing images
-└── README.md        # Project documentation
+├── public/              # Static assets
+├── src/
+│   ├── components/
+│   │   ├── layout/      # Navbar, Footer
+│   │   ├── sections/    # Hero, About, Skills, Projects, Education, Contact
+│   │   └── ui/          # Shared UI components
+│   ├── context/         # Theme provider
+│   ├── data/            # Personal info, projects, skills, education
+│   ├── hooks/           # Active section scroll hook
+│   ├── App.jsx
+│   └── main.jsx
+├── index.html
+└── package.json
+```
+
+## Deployment
+
+Deploy the `dist` folder to [Vercel](https://vercel.com), [Netlify](https://netlify.com), or any static host:
+
+```bash
+npm run build
 ```
 
 ## License
 
-This project is open-source and available under the [MIT License](LICENSE).
+MIT License
