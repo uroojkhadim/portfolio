@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion'
 import { ArrowDown, Download, Github, Linkedin, Mail, Sparkles } from 'lucide-react'
 import { personalInfo } from '../../data/personal'
+import { cvAnchorProps } from '../../data/cv'
 import { Button } from '../ui/Shared'
 import { scrollToSection } from '../../hooks/useActiveSection'
 
@@ -99,7 +100,7 @@ export default function Hero() {
               <Button variant="secondary" onClick={() => scrollToSection('contact')}>
                 Contact Me
               </Button>
-              <Button variant="outline" href={personalInfo.cvDownload} download={personalInfo.cvFilename}>
+              <Button variant="outline" {...cvAnchorProps}>
                 <Download size={16} />
                 Download CV
               </Button>

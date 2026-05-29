@@ -8,7 +8,7 @@ import {
   FileText,
   Sparkles,
 } from 'lucide-react'
-import { cvLinks } from '../../data/cv'
+import { cvLinks, cvAnchorProps, cvOpenProps } from '../../data/cv'
 import { personalInfo } from '../../data/personal'
 import { SectionHeading, FadeIn, Button } from '../ui/Shared'
 
@@ -64,11 +64,11 @@ export default function Resume() {
                     {showPreview ? <EyeOff size={16} /> : <Eye size={16} />}
                     {showPreview ? 'Hide Preview' : 'Preview Resume'}
                   </Button>
-                  <Button href={cvLinks.download} download={cvLinks.filename}>
+                  <Button {...cvAnchorProps}>
                     <Download size={16} />
                     Download Resume
                   </Button>
-                  <Button variant="outline" href={cvLinks.openInNewTab} target="_blank">
+                  <Button variant="outline" {...cvOpenProps}>
                     <ExternalLink size={16} />
                     Open in New Tab
                   </Button>
@@ -96,9 +96,7 @@ export default function Resume() {
                     <p className="mt-3 text-center text-xs text-slate-500 dark:text-slate-400">
                       If the preview does not load, use{' '}
                       <a
-                        href={cvLinks.openInNewTab}
-                        target="_blank"
-                        rel="noopener noreferrer"
+                        {...cvOpenProps}
                         className="font-medium text-indigo-600 hover:underline dark:text-indigo-400"
                       >
                         Open in New Tab
@@ -126,7 +124,7 @@ export default function Resume() {
                     <Eye size={16} />
                     Preview Resume
                   </Button>
-                  <Button variant="outline" href={cvLinks.download} download={cvLinks.filename}>
+                  <Button variant="outline" {...cvAnchorProps}>
                     <Download size={16} />
                     Download CV
                   </Button>

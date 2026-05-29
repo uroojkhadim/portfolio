@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Menu, X, Moon, Sun, Download } from 'lucide-react'
 import { personalInfo, navLinks } from '../../data/personal'
+import { cvAnchorProps } from '../../data/cv'
 import { useTheme } from '../../context/ThemeContext'
 import { useActiveSection, scrollToSection } from '../../hooks/useActiveSection'
 
@@ -77,8 +78,7 @@ export default function Navbar() {
 
           <div className="flex items-center gap-2">
             <a
-              href={personalInfo.cvDownload}
-              download={personalInfo.cvFilename}
+              {...cvAnchorProps}
               className="hidden items-center gap-1.5 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 px-3.5 py-2 text-sm font-semibold text-white shadow-md shadow-indigo-500/25 transition-all hover:brightness-110 sm:inline-flex"
             >
               <Download size={15} />
@@ -139,8 +139,7 @@ export default function Navbar() {
                 </motion.button>
               ))}
               <a
-                href={personalInfo.cvDownload}
-                download={personalInfo.cvFilename}
+                {...cvAnchorProps}
                 className="mt-2 flex items-center gap-2 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 px-4 py-3 text-base font-medium text-white"
               >
                 <Download size={18} />
