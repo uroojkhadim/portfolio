@@ -19,21 +19,30 @@ function safeParseJson(str, fallback = []) {
   try { return JSON.parse(str) } catch { return fallback }
 }
 
+function safeCount(table, where = '') {
+  try {
+    const q = where ? `SELECT COUNT(*) as c FROM ${table} WHERE ${where}` : `SELECT COUNT(*) as c FROM ${table}`
+    return db.prepare(q).get()?.c || 0
+  } catch {
+    return 0
+  }
+}
+
 // ─── Dashboard Stats ──────────────────────────────────────────────────────────
 router.get('/stats', (req, res) => {
   try {
     const stats = {
-      total_projects: db.prepare('SELECT COUNT(*) as c FROM projects').get().c,
-      published_projects: db.prepare('SELECT COUNT(*) as c FROM projects WHERE published=1').get().c,
-      total_skills: db.prepare('SELECT COUNT(*) as c FROM skills').get().c,
-      total_experience: db.prepare('SELECT COUNT(*) as c FROM experience').get().c,
-      total_education: db.prepare('SELECT COUNT(*) as c FROM education').get().c,
-      total_documents: db.prepare('SELECT COUNT(*) as c FROM documents').get().c,
-      published_documents: db.prepare('SELECT COUNT(*) as c FROM documents WHERE published=1').get().c,
-      total_certificates: db.prepare('SELECT COUNT(*) as c FROM certificates').get().c,
-      unpublished_projects: db.prepare('SELECT COUNT(*) as c FROM projects WHERE published=0').get().c,
-      total_messages: db.prepare('SELECT COUNT(*) as c FROM contact_messages').get().c,
-      unread_messages: db.prepare("SELECT COUNT(*) as c FROM contact_messages WHERE status='unread'").get().c,
+      total_projects: safeCount('projects'),
+      published_projects: safeCount('projects', 'published=1'),
+      total_skills: safeCount('skills'),
+      total_experience: safeCount('experience'),
+      total_education: safeCount('education'),
+      total_documents: safeCount('documents'),
+      published_documents: safeCount('documents', 'published=1'),
+      total_certificates: safeCount('certificates'),
+      unpublished_projects: safeCount('projects', 'published=0'),
+      total_messages: safeCount('contact_messages'),
+      unread_messages: safeCount('contact_messages', "status='unread'"),
     }
     res.json(stats)
   } catch (err) {
