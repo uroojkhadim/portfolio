@@ -149,7 +149,13 @@ export default function Chatbot() {
         throw new Error(`Server returned ${response.status}`)
       }
 
-      const data = await response.json()
+      const text = await response.text()
+      let data = {}
+      try {
+        data = JSON.parse(text)
+      } catch {
+        data = {}
+      }
       const botReply = data.reply || getKnowledgeBaseAnswer(query, messages)
 
       setMessages((prev) => [

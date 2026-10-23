@@ -11,17 +11,49 @@ import fs from 'fs'
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
-const DB_PATH = path.join(__dirname, 'data', 'portfolio.db')
-const DATA_DIR = path.join(__dirname, 'data')
+const isServerless = Boolean(process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME || process.env.NETLIFY)
 
-// Ensure data directory exists
-if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true })
+let DATA_DIR = path.join(__dirname, 'data')
+let DB_PATH = path.join(DATA_DIR, 'portfolio.db')
 
-const db = new Database(DB_PATH)
+if (isServerless) {
+  DATA_DIR = '/tmp/portfolio-data'
+  DB_PATH = path.join(DATA_DIR, 'portfolio.db')
+}
 
-// Enable WAL mode for better performance
-db.pragma('journal_mode = WAL')
-db.pragma('foreign_keys = ON')
+// Ensure data directory exists (with fallback to /tmp if read-only)
+try {
+  if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true })
+} catch (err) {
+  DATA_DIR = '/tmp/portfolio-data'
+  DB_PATH = path.join(DATA_DIR, 'portfolio.db')
+  if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true })
+}
+
+// If on serverless, copy any pre-seeded database to writable /tmp
+const bundledDb = path.join(__dirname, 'data', 'portfolio.db')
+if (DB_PATH !== bundledDb && fs.existsSync(bundledDb) && !fs.existsSync(DB_PATH)) {
+  try {
+    fs.copyFileSync(bundledDb, DB_PATH)
+    console.log('[DB] Copied bundled database to writable location:', DB_PATH)
+  } catch (e) {
+    console.warn('[DB] Notice on copying bundled DB:', e.message)
+  }
+}
+
+let db
+try {
+  db = new Database(DB_PATH)
+  // Enable WAL mode for better performance
+  try {
+    db.pragma('journal_mode = WAL')
+    db.pragma('foreign_keys = ON')
+  } catch {}
+} catch (dbErr) {
+  console.error('[DB] Failed to open SQLite database:', dbErr.message)
+  // Fallback in-memory DB so app won't crash on serverless
+  db = new Database(':memory:')
+}
 
 // ─── Schema ──────────────────────────────────────────────────────────────────
 

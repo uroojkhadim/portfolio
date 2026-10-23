@@ -10,7 +10,11 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     if (!token) { setLoading(false); return }
     fetch('/api/admin/me', { headers: { Authorization: `Bearer ${token}` } })
-      .then(r => r.ok ? r.json() : null)
+      .then(async (r) => {
+        if (!r.ok) return null
+        const text = await r.text()
+        try { return JSON.parse(text) } catch { return null }
+      })
       .then(data => {
         if (data?.user) { setUser(data.user) }
         else { setToken(null); localStorage.removeItem('admin_token') }
@@ -25,8 +29,16 @@ export function AuthProvider({ children }) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password }),
     })
-    const data = await res.json()
-    if (!res.ok) throw new Error(data.error || 'Login failed.')
+
+    const text = await res.text()
+    let data = {}
+    try {
+      data = JSON.parse(text)
+    } catch {
+      data = { error: res.ok ? 'Invalid response from server' : `Server error (${res.status}): ${res.statusText || 'Unable to connect to login API.'}` }
+    }
+
+    if (!res.ok) throw new Error(data.error || `Login failed (${res.status}).`)
     setToken(data.token)
     setUser(data.user)
     localStorage.setItem('admin_token', data.token)

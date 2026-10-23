@@ -21,6 +21,19 @@ function mapSkillsFromApi(apiData) {
   return apiData
 }
 
+const safeJsonFetch = async (url) => {
+  try {
+    const res = await fetch(url)
+    if (!res.ok) return null
+    const contentType = res.headers.get('content-type') || ''
+    if (!contentType.includes('application/json')) return null
+    const text = await res.text()
+    return JSON.parse(text)
+  } catch {
+    return null
+  }
+}
+
 export function DataProvider({ children }) {
   const [data, setData] = useState({
     webProjects: webProjects,
@@ -41,15 +54,15 @@ export function DataProvider({ children }) {
     async function fetchAll() {
       try {
         const [projectsRes, skillsRes, expRes, eduRes, docsRes, certsRes, aboutRes, contactRes, settingsRes] = await Promise.allSettled([
-          fetch('/api/public/projects').then(r => r.ok ? r.json() : null),
-          fetch('/api/public/skills').then(r => r.ok ? r.json() : null),
-          fetch('/api/public/experience').then(r => r.ok ? r.json() : null),
-          fetch('/api/public/education').then(r => r.ok ? r.json() : null),
-          fetch('/api/public/documents').then(r => r.ok ? r.json() : null),
-          fetch('/api/public/certificates').then(r => r.ok ? r.json() : null),
-          fetch('/api/public/about').then(r => r.ok ? r.json() : null),
-          fetch('/api/public/contact').then(r => r.ok ? r.json() : null),
-          fetch('/api/public/settings').then(r => r.ok ? r.json() : null),
+          safeJsonFetch('/api/public/projects'),
+          safeJsonFetch('/api/public/skills'),
+          safeJsonFetch('/api/public/experience'),
+          safeJsonFetch('/api/public/education'),
+          safeJsonFetch('/api/public/documents'),
+          safeJsonFetch('/api/public/certificates'),
+          safeJsonFetch('/api/public/about'),
+          safeJsonFetch('/api/public/contact'),
+          safeJsonFetch('/api/public/settings'),
         ])
 
         const projects = projectsRes.status === 'fulfilled' ? projectsRes.value : null

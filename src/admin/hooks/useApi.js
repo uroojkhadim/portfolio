@@ -15,7 +15,15 @@ export function useApi() {
 
     const res = await fetch(url, { ...options, headers })
     if (res.status === 401) { logout(); throw new Error('Session expired. Please log in again.') }
-    const data = await res.json().catch(() => ({}))
+    
+    const text = await res.text()
+    let data = {}
+    try {
+      data = JSON.parse(text)
+    } catch {
+      data = { error: res.ok ? 'Invalid response from server' : `Server responded with ${res.status}: ${res.statusText || 'Not Found'}` }
+    }
+
     if (!res.ok) throw new Error(data.error || `Request failed (${res.status})`)
     return data
   }

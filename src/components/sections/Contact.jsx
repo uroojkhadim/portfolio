@@ -139,7 +139,13 @@ export default function Contact() {
         body: JSON.stringify(formState),
       })
 
-      const data = await response.json()
+      const text = await response.text()
+      let data = {}
+      try {
+        data = JSON.parse(text)
+      } catch {
+        data = { error: response.ok ? 'Invalid response' : `Server responded with ${response.status}: ${response.statusText || 'Unable to submit'}` }
+      }
 
       if (!response.ok) {
         throw new Error(data.error || `Server responded with ${response.status}`)

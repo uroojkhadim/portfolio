@@ -6,8 +6,17 @@ import db from '../db.js'
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
-const DATA_DIR = path.resolve(__dirname, '../data')
-const MESSAGES_FILE = path.join(DATA_DIR, 'messages.json')
+function getStoragePaths() {
+  const isServerless = Boolean(process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME || process.env.NETLIFY)
+  let dir = path.resolve(__dirname, '../data')
+  if (isServerless) {
+    dir = '/tmp/portfolio-data'
+  }
+  return {
+    dir,
+    file: path.join(dir, 'messages.json'),
+  }
+}
 
 // In-memory rate limiting and deduplication cache
 const recentSubmissions = new Map() // key: ip or email -> timestamp
@@ -16,14 +25,15 @@ const ipSubmissionCounts = new Map() // key: ip -> [timestamps]
 /** Ensure persistent storage file exists */
 function ensureStorage() {
   try {
-    if (!fs.existsSync(DATA_DIR)) {
-      fs.mkdirSync(DATA_DIR, { recursive: true })
+    const { dir, file } = getStoragePaths()
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true })
     }
-    if (!fs.existsSync(MESSAGES_FILE)) {
-      fs.writeFileSync(MESSAGES_FILE, JSON.stringify([], null, 2), 'utf-8')
+    if (!fs.existsSync(file)) {
+      fs.writeFileSync(file, JSON.stringify([], null, 2), 'utf-8')
     }
   } catch (err) {
-    console.error('[Storage Service] Error initializing messages directory:', err)
+    console.warn('[Storage Service] Notice initializing messages directory:', err.message)
   }
 }
 
@@ -90,16 +100,17 @@ export async function saveMessage({ name, email, subject, message, clientIp = '1
 
   // Secondary: also write JSON for backward compat / WhatsApp notification status tracking
   try {
+    const { file: messagesFile } = getStoragePaths()
     let messages = []
-    if (fs.existsSync(MESSAGES_FILE)) {
-      const content = fs.readFileSync(MESSAGES_FILE, 'utf-8')
+    if (fs.existsSync(messagesFile)) {
+      const content = fs.readFileSync(messagesFile, 'utf-8')
       messages = JSON.parse(content || '[]')
     }
     messages.unshift(record) // newest first
-    fs.writeFileSync(MESSAGES_FILE, JSON.stringify(messages, null, 2), 'utf-8')
-    console.log(`[Storage Service] Message ${id} also written to ${MESSAGES_FILE}`)
+    fs.writeFileSync(messagesFile, JSON.stringify(messages, null, 2), 'utf-8')
+    console.log(`[Storage Service] Message ${id} also written to ${messagesFile}`)
   } catch (err) {
-    console.error('[Storage Service] Failed to save message to JSON fallback:', err)
+    console.warn('[Storage Service] Notice saving message to JSON fallback:', err.message)
   }
 
   return record
@@ -109,17 +120,18 @@ export async function saveMessage({ name, email, subject, message, clientIp = '1
 export function updateMessageNotificationStatus(id, status, error = null) {
   ensureStorage()
   try {
-    if (!fs.existsSync(MESSAGES_FILE)) return
-    const content = fs.readFileSync(MESSAGES_FILE, 'utf-8')
+    const { file: messagesFile } = getStoragePaths()
+    if (!fs.existsSync(messagesFile)) return
+    const content = fs.readFileSync(messagesFile, 'utf-8')
     const messages = JSON.parse(content || '[]')
     const idx = messages.findIndex((m) => m.id === id)
     if (idx !== -1) {
       messages[idx].whatsappNotificationStatus = status
       messages[idx].whatsappNotificationError = error ? String(error) : null
       messages[idx].notifiedAt = new Date().toISOString()
-      fs.writeFileSync(MESSAGES_FILE, JSON.stringify(messages, null, 2), 'utf-8')
+      fs.writeFileSync(messagesFile, JSON.stringify(messages, null, 2), 'utf-8')
     }
   } catch (err) {
-    console.error(`[Storage Service] Failed to update status for ${id}:`, err)
+    console.warn(`[Storage Service] Notice updating status for ${id}:`, err.message)
   }
 }

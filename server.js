@@ -99,7 +99,11 @@ if (fs.existsSync(DIST_DIR)) {
 }
 
 // ─── Start Server ─────────────────────────────────────────────────────────────
-app.listen(PORT, () => {
-  console.log(`[Portfolio Server] Running at http://localhost:${PORT}`)
-  console.log(`[Portfolio Server] Admin panel at http://localhost:${PORT}/admin`)
-})
+if (!process.env.VERCEL && process.env.NODE_ENV !== 'test') {
+  app.listen(PORT, () => {
+    console.log(`[Portfolio Server] Running at http://localhost:${PORT}`)
+    console.log(`[Portfolio Server] Admin panel at http://localhost:${PORT}/admin`)
+  })
+}
+
+export default app
