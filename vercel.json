@@ -1,8 +1,27 @@
 {
   "rewrites": [
     {
-      "source": "/((?!api/|cv/|images/|icons/|.*\\..*).*)",
+      "source": "/admin",
+      "destination": "/admin.html"
+    },
+    {
+      "source": "/admin/:match*",
+      "destination": "/admin.html"
+    },
+    {
+      "source": "/((?!admin|api/|cv/|images/|icons/|uploads/|.*\\..*).*)",
       "destination": "/index.html"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/admin(.*)",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        }
+      ]
     }
   ]
 }
