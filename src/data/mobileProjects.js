@@ -1,101 +1,61 @@
-export const MOBILE_REPO_URL =
-  'https://github.com/uroojkhadim/FA23-BSE-019-5A-UroojKhadim'
-
-const repoLinks = {
-  status: 'Completed',
-  liveUrl: MOBILE_REPO_URL,
-  githubUrl: MOBILE_REPO_URL,
-}
+/**
+ * Flutter / Mobile Application Projects
+ * 
+ * Requirement constraints:
+ * For every Flutter project, display ONLY:
+ * 1. Project name
+ * 2. A concise description of approximately 2–3 lines
+ * 3. A relevant AI-generated project image
+ * (No live links, repository links, technology badges, lengthy feature lists, or unnecessary metadata on the card)
+ */
 
 export const mobileProjects = [
+  {
+    id: 'cv-maker-app',
+    title: 'CV Maker App',
+    description:
+      'A mobile application for creating and managing professional CVs and resumes with customizable design templates, real-time preview, and high-quality PDF document export.',
+    image: '/images/projects/cv-maker-app.svg',
+    alt: 'CV Maker App mobile interface for creating and managing professional resumes and CVs',
+  },
   {
     id: 'predictive-healthcare',
     title: 'Predictive Healthcare & Recommendation System',
     description:
-      'A healthcare-focused mobile application developed using Flutter for health prediction, recommendations, and an interactive modern user experience.',
-    tech: ['Flutter', 'Dart', 'Firebase'],
-    features: [
-      'Prediction system',
-      'Recommendation system',
-      'Modern UI',
-      'Responsive mobile experience',
-    ],
-    gradient: 'from-rose-500/40 via-pink-500/25 to-red-500/30',
-    screenGradient: 'from-rose-600 to-pink-700',
-    accent: '#f43f5e',
-    type: 'mobile',
-    ...repoLinks,
+      'A healthcare mobile application built with Flutter that monitors daily vital health metrics, generates risk predictions using machine learning models, and offers personalized clinical wellness recommendations.',
+    image: '/images/projects/predictive-healthcare.svg',
+    alt: 'Predictive Healthcare mobile application interface with diagnostic metrics and ML risk assessment',
   },
   {
-    id: 'todo-list-mobile',
-    title: 'To-Do List Mobile App',
+    id: 'task-management-mobile',
+    title: 'Task Management Mobile App',
     description:
-      'A full-stack productivity mobile application for task management with authentication and backend integration.',
-    tech: ['React Native', 'Node.js', 'Express.js', 'MongoDB'],
-    features: [
-      'Task management',
-      'Authentication',
-      'Backend integration',
-      'Responsive mobile UI',
-    ],
-    gradient: 'from-indigo-500/40 via-blue-500/25 to-violet-500/30',
-    screenGradient: 'from-indigo-600 to-violet-700',
-    accent: '#6366f1',
-    type: 'mobile',
-    ...repoLinks,
+      'A productivity-focused mobile application designed to help users organize daily tasks, set priorities with due-date reminders, track completion metrics, and maintain offline-ready productivity.',
+    image: '/images/projects/task-management.svg',
+    alt: 'Task Management mobile application interface with task cards and completion metrics',
   },
   {
     id: 'musify',
     title: 'Musify App',
     description:
-      'A modern music streaming and listening mobile application with a clean user interface and engaging experience.',
-    tech: ['Flutter', 'Dart', 'Firebase'],
-    features: [
-      'Music UI',
-      'Playlist interaction',
-      'Modern mobile design',
-      'Responsive experience',
-    ],
-    gradient: 'from-purple-500/40 via-fuchsia-500/25 to-violet-500/30',
-    screenGradient: 'from-purple-600 to-fuchsia-700',
-    accent: '#a855f7',
-    type: 'mobile',
-    ...repoLinks,
+      'A modern mobile music streaming application featuring custom playlist curation, an audio equalizer, interactive sound wave controls, and a high-performance dark audio playback interface.',
+    image: '/images/projects/musify-app.svg',
+    alt: 'Musify music playback mobile interface with audio scrubber and playlist controls',
   },
   {
     id: 'wemuslim',
     title: 'WeMuslim App',
     description:
-      'A modern Islamic mobile application designed with useful features and a clean user-friendly experience.',
-    tech: ['Flutter', 'Dart', 'Firebase'],
-    features: [
-      'Islamic utility features',
-      'Modern interface',
-      'Smooth user experience',
-      'Responsive mobile design',
-    ],
-    gradient: 'from-emerald-500/40 via-teal-500/25 to-green-500/30',
-    screenGradient: 'from-emerald-600 to-teal-700',
-    accent: '#10b981',
-    type: 'mobile',
-    ...repoLinks,
+      'A feature-rich Islamic mobile utility offering precise prayer time notifications, Qibla direction finder, daily Quranic supplications, and an interactive digital Tasbeeh counter.',
+    image: '/images/projects/wemuslim-app.svg',
+    alt: 'WeMuslim Islamic mobile utility with digital Tasbeeh counter and prayer times schedule',
   },
   {
     id: 'pos-coffee-shop',
     title: 'POS Coffee Shop Inventory Management System',
     description:
-      'A mobile inventory and point-of-sale management system for coffee shop operations with product and inventory handling.',
-    tech: ['Flutter', 'Dart', 'Firebase'],
-    features: [
-      'Inventory management',
-      'POS functionality',
-      'Product handling',
-      'Modern responsive interface',
-    ],
-    gradient: 'from-amber-500/40 via-orange-500/25 to-yellow-500/30',
-    screenGradient: 'from-amber-600 to-orange-700',
-    accent: '#f59e0b',
-    type: 'mobile',
-    ...repoLinks,
+      'A specialized point-of-sale and stock management mobile solution built for cafe workflows, featuring rapid order processing, inventory thresholds, and digital checkout summaries.',
+    image: '/images/projects/pos-coffee-shop.svg',
+    alt: 'POS Coffee Shop inventory management system interface with product catalog and checkout terminal',
   },
 ]

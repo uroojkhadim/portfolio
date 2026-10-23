@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500" width="800" height="500">
+  <defs>
+    <linearGradient id="qw-bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#042017"/>
+      <stop offset="60%" stop-color="#064e3b"/>
+      <stop offset="100%" stop-color="#065f46"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="800" height="500" fill="url(#qw-bg)"/>
+  <circle cx="680" cy="120" r="150" fill="#10b981" opacity="0.18"/>
+
+  <g transform="translate(60, 40)">
+    <rect width="680" height="420" rx="16" fill="#0f172a" stroke="#1e293b" stroke-width="2"/>
+    <rect width="680" height="40" rx="16" fill="#1e293b"/>
+    <circle cx="24" cy="20" r="5" fill="#ef4444"/>
+    <circle cx="40" cy="20" r="5" fill="#f59e0b"/>
+    <circle cx="56" cy="20" r="5" fill="#10b981"/>
+    <rect x="180" y="8" width="320" height="24" rx="6" fill="#0f172a"/>
+    <text x="200" y="24" fill="#94a3b8" font-family="-apple-system, sans-serif" font-size="11">quiz-website-blush-xi.vercel.app</text>
+
+    <!-- Quiz Navigation -->
+    <rect x="0" y="40" width="680" height="46" fill="#111827"/>
+    <text x="30" y="69" fill="#10b981" font-family="-apple-system, sans-serif" font-size="14" font-weight="800">QuizMaster <tspan fill="#ffffff">Web</tspan></text>
+    <text x="240" y="69" fill="#ffffff" font-family="-apple-system, sans-serif" font-size="12">Question 4 of 10</text>
+    <rect x="560" y="50" width="90" height="26" rx="6" fill="rgba(239,68,68,0.2)" stroke="#ef4444"/>
+    <text x="605" y="67" text-anchor="middle" fill="#ef4444" font-family="-apple-system, sans-serif" font-size="11" font-weight="700">⏱ 00:42</text>
+
+    <!-- Quiz Card Header -->
+    <rect x="40" y="104" width="600" height="90" rx="14" fill="#1e293b"/>
+    <text x="60" y="132" fill="#34d399" font-family="-apple-system, sans-serif" font-size="11" font-weight="700">SOFTWARE ENGINEERING &amp; DATA STRUCTURES</text>
+    <text x="60" y="162" fill="#ffffff" font-family="-apple-system, sans-serif" font-size="15" font-weight="700">What is the worst-case time complexity of finding an element in a Balanced BST?</text>
+
+    <!-- Options 2x2 -->
+    <rect x="40" y="210" width="290" height="52" rx="12" fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.1)"/>
+    <circle cx="65" cy="236" r="12" fill="#334155"/>
+    <text x="65" y="241" text-anchor="middle" fill="#ffffff" font-family="-apple-system, sans-serif" font-size="11" font-weight="700">A</text>
+    <text x="90" y="241" fill="#cbd5e1" font-family="-apple-system, sans-serif" font-size="13">O(n)</text>
+
+    <rect x="350" y="210" width="290" height="52" rx="12" fill="rgba(16,185,129,0.15)" stroke="#10b981" stroke-width="2"/>
+    <circle cx="375" cy="236" r="12" fill="#10b981"/>
+    <text x="375" y="241" text-anchor="middle" fill="#ffffff" font-family="-apple-system, sans-serif" font-size="11" font-weight="700">B</text>
+    <text x="400" y="241" fill="#ffffff" font-family="-apple-system, sans-serif" font-size="13" font-weight="700">O(log n) · Correct</text>
+
+    <rect x="40" y="275" width="290" height="52" rx="12" fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.1)"/>
+    <circle cx="65" cy="301" r="12" fill="#334155"/>
+    <text x="65" y="306" text-anchor="middle" fill="#ffffff" font-family="-apple-system, sans-serif" font-size="11" font-weight="700">C</text>
+    <text x="90" y="306" fill="#cbd5e1" font-family="-apple-system, sans-serif" font-size="13">O(n log n)</text>
+
+    <rect x="350" y="275" width="290" height="52" rx="12" fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.1)"/>
+    <circle cx="375" cy="301" r="12" fill="#334155"/>
+    <text x="375" y="306" text-anchor="middle" fill="#ffffff" font-family="-apple-system, sans-serif" font-size="11" font-weight="700">D</text>
+    <text x="400" y="306" fill="#cbd5e1" font-family="-apple-system, sans-serif" font-size="13">O(1)</text>
+
+    <!-- Footer Action -->
+    <rect x="490" y="348" width="150" height="38" rx="10" fill="#10b981"/>
+    <text x="565" y="372" text-anchor="middle" fill="#ffffff" font-family="-apple-system, sans-serif" font-size="12" font-weight="700">Next Question →</text>
+  </g>
+</svg>

@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500" width="800" height="500">
+  <defs>
+    <linearGradient id="cui-bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0f0c20"/>
+      <stop offset="60%" stop-color="#1e1642"/>
+      <stop offset="100%" stop-color="#3b1f66"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="800" height="500" fill="url(#cui-bg)"/>
+  <circle cx="680" cy="110" r="160" fill="#8b5cf6" opacity="0.2"/>
+
+  <g transform="translate(60, 40)">
+    <rect width="680" height="420" rx="16" fill="#0d1117" stroke="#30363d" stroke-width="2"/>
+    <rect width="680" height="40" rx="16" fill="#161b22"/>
+    <circle cx="24" cy="20" r="5" fill="#ef4444"/>
+    <circle cx="40" cy="20" r="5" fill="#f59e0b"/>
+    <circle cx="56" cy="20" r="5" fill="#10b981"/>
+    <rect x="160" y="8" width="360" height="24" rx="6" fill="#0d1117"/>
+    <text x="180" y="24" fill="#8b949e" font-family="-apple-system, sans-serif" font-size="11">cui-plagiarism-portal-frontend.vercel.app</text>
+
+    <!-- Top nav -->
+    <rect x="0" y="40" width="680" height="46" fill="#161b22"/>
+    <text x="30" y="69" fill="#a78bfa" font-family="-apple-system, sans-serif" font-size="14" font-weight="800">CUI Vehari <tspan fill="#ffffff">| Plagiarism Portal</tspan></text>
+    <text x="290" y="69" fill="#ffffff" font-family="-apple-system, sans-serif" font-size="12">Document Queue</text>
+    <text x="420" y="69" fill="#8b949e" font-family="-apple-system, sans-serif" font-size="12">Verification Reports</text>
+    <rect x="560" y="50" width="90" height="26" rx="6" fill="#7c3aed"/>
+    <text x="605" y="67" text-anchor="middle" fill="#ffffff" font-family="-apple-system, sans-serif" font-size="11" font-weight="600">+ Upload Thesis</text>
+
+    <!-- Document Upload Dropzone & Report -->
+    <rect x="30" y="102" width="390" height="150" rx="12" fill="rgba(124,58,237,0.1)" stroke="#7c3aed" stroke-width="1.5" stroke-dasharray="6 4"/>
+    <circle cx="225" cy="155" r="24" fill="rgba(124,58,237,0.2)"/>
+    <path d="M 225 145 L 225 165 M 216 154 L 225 145 L 234 154" fill="none" stroke="#a78bfa" stroke-width="2.5" stroke-linecap="round"/>
+    <text x="225" y="195" text-anchor="middle" fill="#ffffff" font-family="-apple-system, sans-serif" font-size="13" font-weight="600">Drag &amp; Drop MS Word or PDF Manuscript</text>
+    <text x="225" y="215" text-anchor="middle" fill="#8b949e" font-family="-apple-system, sans-serif" font-size="11">Encrypted upload with Supabase &amp; Backblaze B2 storage</text>
+
+    <!-- Plagiarism Score Card -->
+    <rect x="440" y="102" width="210" height="150" rx="12" fill="#161b22" stroke="rgba(255,255,255,0.08)"/>
+    <text x="455" y="126" fill="#8b949e" font-family="-apple-system, sans-serif" font-size="11" font-weight="600">SIMILARITY INDEX</text>
+    <circle cx="545" cy="178" r="42" fill="none" stroke="rgba(16,185,129,0.2)" stroke-width="6"/>
+    <circle cx="545" cy="178" r="42" fill="none" stroke="#10b981" stroke-width="6" stroke-dasharray="210 60" stroke-linecap="round"/>
+    <text x="545" y="178" text-anchor="middle" fill="#ffffff" font-family="-apple-system, sans-serif" font-size="20" font-weight="800">11%</text>
+    <text x="545" y="196" text-anchor="middle" fill="#10b981" font-family="-apple-system, sans-serif" font-size="10" font-weight="700">ACCEPTED</text>
+    <text x="545" y="235" text-anchor="middle" fill="#8b949e" font-family="-apple-system, sans-serif" font-size="10">Threshold: &lt; 19% HEC Standard</text>
+
+    <!-- Recent Submissions Table -->
+    <rect x="30" y="268" width="620" height="130" rx="12" fill="#161b22"/>
+    <text x="46" y="294" fill="#ffffff" font-family="-apple-system, sans-serif" font-size="12" font-weight="700">Recent Institutional Checks</text>
+
+    <line x1="30" y1="306" x2="650" y2="306" stroke="#21262d"/>
+    <text x="46" y="328" fill="#c9d1d9" font-family="-apple-system, sans-serif" font-size="11">FA21-BSE-042_Final_Thesis.docx</text>
+    <text x="320" y="328" fill="#8b949e" font-family="-apple-system, sans-serif" font-size="11">COMSATS Library</text>
+    <text x="480" y="328" fill="#10b981" font-family="-apple-system, sans-serif" font-size="11" font-weight="600">8% (Original)</text>
+    <text x="590" y="328" fill="#58a6ff" font-family="-apple-system, sans-serif" font-size="11">Download PDF</text>
+
+    <line x1="30" y1="344" x2="650" y2="344" stroke="#21262d"/>
+    <text x="46" y="366" fill="#c9d1d9" font-family="-apple-system, sans-serif" font-size="11">SP22-MCS-019_Research_Paper.pdf</text>
+    <text x="320" y="366" fill="#8b949e" font-family="-apple-system, sans-serif" font-size="11">CS Department</text>
+    <text x="480" y="366" fill="#10b981" font-family="-apple-system, sans-serif" font-size="11" font-weight="600">14% (Cleared)</text>
+    <text x="590" y="366" fill="#58a6ff" font-family="-apple-system, sans-serif" font-size="11">Download PDF</text>
+  </g>
+</svg>

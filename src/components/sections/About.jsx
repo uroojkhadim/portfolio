@@ -1,120 +1,197 @@
-import { GraduationCap, MapPin } from 'lucide-react'
-import { personalInfo } from '../../data/personal'
-import { interests } from '../../data/education'
-import { SectionHeading, FadeIn } from '../ui/Shared'
+import {
+  GraduationCap,
+  MapPin,
+  Building2,
+  Code2,
+  Smartphone,
+  BrainCircuit,
+  ShieldCheck,
+  ArrowRight,
+  Download,
+  FileDown,
+} from 'lucide-react'
+import { personalInfo, aboutInterests } from '../../data/personal'
+import { cvDownloadProps, resumeDownloadProps } from '../../data/cv'
+import { SectionHeading, FadeIn, Button } from '../ui/Shared'
+import { useNavigation } from '../../context/NavigationContext'
+import { usePortfolioData } from '../../context/DataContext'
+
+const focusIcons = {
+  0: Code2,
+  1: Smartphone,
+  2: BrainCircuit,
+  3: ShieldCheck,
+}
 
 export default function About() {
+  const { navigateTo } = useNavigation()
+  const { about: liveAbout } = usePortfolioData()
+
+  const degree = liveAbout?.degree || personalInfo.degree
+  const university = liveAbout?.university || personalInfo.university
+  const location = liveAbout?.location || personalInfo.location
+  const bio = liveAbout?.bio || null
+
   return (
     <section id="about" className="section-padding relative">
-      <div className="section-container">
+      <div className="section-container relative">
         <SectionHeading
           eyebrow="About Me"
-          title="Passionate about building meaningful software"
-          description="A Software Engineering student with hands-on experience in web, mobile, and quality-focused development."
+          title="Engineering thoughtful digital experiences"
+          description="A dedicated Software Engineering student combining computer science foundations with hands-on web, mobile, and intelligent systems development."
         />
 
-        <div className="grid gap-10 lg:grid-cols-[340px_1fr] lg:gap-14">
-          <FadeIn className="lg:sticky lg:top-28 lg:self-start">
-            <div className="glass-card p-8 text-center">
-              <div className="relative mx-auto mb-5 h-32 w-32">
-                <div className="absolute -inset-1 rounded-2xl bg-gradient-to-br from-indigo-500 to-violet-600 opacity-80" />
-                <img
-                  src={personalInfo.profileImage}
-                  alt={personalInfo.name}
-                  className="relative h-full w-full rounded-2xl object-cover shadow-lg"
-                />
+        {/* Bio & Academic Identity Card */}
+        <div className="grid gap-8 lg:grid-cols-12 lg:gap-10">
+          {/* Main Story & Philosophy */}
+          <FadeIn className="lg:col-span-8">
+            <div className="glass-card flex h-full flex-col justify-between border border-slate-200/80 p-6 sm:p-8 dark:border-slate-800">
+              <div>
+                <h3 className="font-display text-xl font-bold text-slate-900 dark:text-white">
+                  Professional Background
+                </h3>
+                {bio ? (
+                  <div className="mt-4 text-sm leading-relaxed text-slate-600 dark:text-slate-400 sm:text-base whitespace-pre-line">
+                    <p>{bio}</p>
+                  </div>
+                ) : (
+                  <div className="mt-4 space-y-4 text-sm leading-relaxed text-slate-600 dark:text-slate-400 sm:text-base">
+                    <p>
+                      I am a Senior Software Engineering student at{' '}
+                      <strong className="font-semibold text-slate-900 dark:text-white">
+                        COMSATS University Islamabad (Vehari Campus)
+                      </strong>
+                      . My journey in technology centers on architecting scalable software, crafting intuitive user interfaces, and solving real-world challenges through clean, maintainable code.
+                    </p>
+                    <p>
+                      Over the course of my academic and practical career, I have developed full-stack web applications using React, modern JavaScript, and RESTful backends, alongside cross-platform mobile apps using Flutter and Dart. I have also completed professional internships in frontend and Android development, gaining experience with team workflows, version control, and client-facing requirements.
+                    </p>
+                    <p>
+                      I am driven by continuous improvement, whether that involves refining software quality engineering practices, exploring applied machine learning algorithms in Python, or writing responsive UI components.
+                    </p>
+                  </div>
+                )}
               </div>
-              <h3 className="font-display text-xl font-bold text-slate-900 dark:text-white">
-                {personalInfo.name}
-              </h3>
-              <p className="mt-1 text-sm font-medium text-indigo-600 dark:text-indigo-400">
-                {personalInfo.role}
-              </p>
-              <div className="mt-5 space-y-2.5 text-left text-sm text-slate-600 dark:text-slate-400">
-                <div className="flex items-center gap-2.5">
-                  <GraduationCap size={16} className="shrink-0 text-indigo-500" />
-                  BS Software Engineering
-                </div>
-                <div className="flex items-center gap-2.5">
-                  <MapPin size={16} className="shrink-0 text-indigo-500" />
-                  {personalInfo.location}
-                </div>
+
+              {/* Action Buttons */}
+              <div className="mt-8 flex flex-wrap items-center gap-3 border-t border-slate-100 pt-6 dark:border-slate-800">
+                <Button onClick={() => navigateTo('projects')}>
+                  <span>Explore My Work</span>
+                  <ArrowRight size={15} />
+                </Button>
+                <a
+                  {...cvDownloadProps}
+                  className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white/90 px-4 py-2.5 text-xs font-semibold text-slate-800 shadow-sm transition-all hover:border-indigo-300 hover:text-indigo-600 dark:border-slate-700 dark:bg-slate-800/90 dark:text-slate-200 dark:hover:border-indigo-500 dark:hover:text-indigo-400"
+                >
+                  <Download size={14} />
+                  <span>Download CV</span>
+                </a>
+                <a
+                  {...resumeDownloadProps}
+                  className="inline-flex items-center gap-1.5 rounded-xl border border-indigo-200 bg-indigo-50/80 px-4 py-2.5 text-xs font-semibold text-indigo-700 shadow-sm transition-all hover:bg-indigo-100 dark:border-indigo-500/30 dark:bg-indigo-500/15 dark:text-indigo-300"
+                >
+                  <FileDown size={14} />
+                  <span>Download Resume</span>
+                </a>
               </div>
             </div>
           </FadeIn>
 
-          <div className="space-y-8">
-            <FadeIn delay={0.1}>
-              <div className="glass-card p-8">
-                <h3 className="font-display text-xl font-bold text-slate-900 dark:text-white">
-                  Introduction
-                </h3>
-                <div className="mt-4 space-y-4 text-slate-600 dark:text-slate-400">
-                  <p className="leading-relaxed">
-                    I am a dedicated Software Engineering student with a strong foundation in
-                    building web and mobile applications. My academic journey has equipped me with
-                    both theoretical knowledge and practical skills across the full software
-                    development lifecycle.
-                  </p>
-                  <p className="leading-relaxed">
-                    I enjoy turning ideas into functional products — from responsive frontends and
-                    RESTful backends to quality-assured, well-documented software. I am actively
-                    seeking internship opportunities and freelance projects where I can contribute,
-                    learn, and grow.
-                  </p>
-                </div>
-              </div>
-            </FadeIn>
-
-            <FadeIn delay={0.15}>
-              <div className="glass-card p-8">
-                <h3 className="font-display text-xl font-bold text-slate-900 dark:text-white">
-                  Education
-                </h3>
-                <div className="mt-5 flex gap-4">
-                  <div className="flex flex-col items-center">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-violet-600 text-white">
-                      <GraduationCap size={18} />
-                    </div>
-                    <div className="mt-2 h-full w-px bg-gradient-to-b from-indigo-300 to-transparent dark:from-indigo-600" />
-                  </div>
-                  <div className="pb-2">
-                    <h4 className="font-semibold text-slate-900 dark:text-white">
-                      Bachelor of Software Engineering
-                    </h4>
-                    <p className="mt-1 text-sm text-indigo-600 dark:text-indigo-400">
-                      Currently Enrolled
-                    </p>
-                    <p className="mt-2 text-sm leading-relaxed text-slate-600 dark:text-slate-400">
-                      Studying software design, web & mobile development, databases, software
-                      quality engineering, and project-based development.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </FadeIn>
-
-            <FadeIn delay={0.2}>
+          {/* Quick Facts & Key Metrics Sidebar */}
+          <FadeIn delay={0.1} className="lg:col-span-4">
+            <div className="glass-card flex h-full flex-col justify-between border border-slate-200/80 p-6 sm:p-7 dark:border-slate-800">
               <div>
-                <h3 className="mb-5 font-display text-xl font-bold text-slate-900 dark:text-white">
-                  Areas of Interest
+                <h3 className="font-display text-lg font-bold text-slate-900 dark:text-white">
+                  Quick Details
                 </h3>
-                <div className="grid gap-4 sm:grid-cols-2">
-                  {interests.map((item, i) => (
-                    <FadeIn key={item.title} delay={0.05 * i}>
-                      <div className="glass-card group h-full p-5 transition-all hover:-translate-y-1 hover:shadow-glow">
-                        <h4 className="font-semibold text-slate-900 transition-colors group-hover:text-indigo-600 dark:text-white dark:group-hover:text-indigo-400">
-                          {item.title}
-                        </h4>
-                        <p className="mt-2 text-sm leading-relaxed text-slate-600 dark:text-slate-400">
-                          {item.description}
-                        </p>
-                      </div>
-                    </FadeIn>
-                  ))}
+
+                <div className="mt-4 space-y-3 text-xs sm:text-sm text-slate-600 dark:text-slate-400">
+                  <div className="flex items-start gap-2.5">
+                    <GraduationCap size={16} className="mt-0.5 shrink-0 text-indigo-500" />
+                    <div>
+                      <p className="font-semibold text-slate-900 dark:text-white">Degree</p>
+                      <p>{personalInfo.degree}</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-2.5">
+                    <Building2 size={16} className="mt-0.5 shrink-0 text-indigo-500" />
+                    <div>
+                      <p className="font-semibold text-slate-900 dark:text-white">University</p>
+                      <p>{personalInfo.university}</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-2.5">
+                    <MapPin size={16} className="mt-0.5 shrink-0 text-indigo-500" />
+                    <div>
+                      <p className="font-semibold text-slate-900 dark:text-white">Location &amp; Availability</p>
+                      <p>{personalInfo.location}</p>
+                    </div>
+                  </div>
                 </div>
               </div>
-            </FadeIn>
+
+              {/* Highlights Summary Grid */}
+              <div className="mt-6 grid grid-cols-2 gap-3 border-t border-slate-100 pt-5 dark:border-slate-800">
+                <div className="rounded-xl border border-slate-100 bg-slate-50/70 p-3 text-center dark:border-slate-800 dark:bg-slate-800/50">
+                  <span className="font-display text-xl font-extrabold text-indigo-600 dark:text-indigo-400">
+                    14+
+                  </span>
+                  <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
+                    Active Projects
+                  </p>
+                </div>
+
+                <div className="rounded-xl border border-slate-100 bg-slate-50/70 p-3 text-center dark:border-slate-800 dark:bg-slate-800/50">
+                  <span className="font-display text-xl font-extrabold text-indigo-600 dark:text-indigo-400">
+                    3+
+                  </span>
+                  <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
+                    Industry Roles
+                  </p>
+                </div>
+              </div>
+            </div>
+          </FadeIn>
+        </div>
+
+        {/* Core Focus Areas */}
+        <div className="mt-14">
+          <div className="mb-6">
+            <h3 className="font-display text-xl font-bold text-slate-900 dark:text-white">
+              Core Technical Focus Areas
+            </h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400">
+              Primary domains of development and software architecture expertise
+            </p>
+          </div>
+
+          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+            {aboutInterests.map((item, i) => {
+              const Icon = focusIcons[i] || Code2
+              return (
+                <FadeIn key={item.title} delay={0.06 * i}>
+                  <div className="glass-card group flex h-full flex-col justify-between border border-slate-200/80 p-5 transition-all duration-300 hover:-translate-y-1 hover:shadow-glow dark:border-slate-800 sm:p-6">
+                    <div>
+                      <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-500/10 text-indigo-600 transition-colors group-hover:bg-indigo-600 group-hover:text-white dark:bg-indigo-500/20 dark:text-indigo-400">
+                        <Icon size={20} />
+                      </div>
+                      <h4 className="font-display text-base font-bold text-slate-900 transition-colors group-hover:text-indigo-600 dark:text-white dark:group-hover:text-indigo-400">
+                        {item.title}
+                      </h4>
+                      <p className="mt-2 text-xs leading-relaxed text-slate-600 dark:text-slate-400">
+                        {item.description}
+                      </p>
+                    </div>
+
+                    <div className="mt-4 border-t border-slate-100 pt-3 text-[11px] font-medium text-indigo-600 dark:border-slate-800 dark:text-indigo-400">
+                      Core Domain &rarr;
+                    </div>
+                  </div>
+                </FadeIn>
+              )
+            })}
           </div>
         </div>
       </div>

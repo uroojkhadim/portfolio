@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500" width="800" height="500">
+  <defs>
+    <linearGradient id="pos-bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1c1208"/>
+      <stop offset="50%" stop-color="#2d1b09"/>
+      <stop offset="100%" stop-color="#422509"/>
+    </linearGradient>
+    <linearGradient id="pos-card" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="rgba(255,255,255,0.08)"/>
+      <stop offset="100%" stop-color="rgba(255,255,255,0.03)"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="800" height="500" fill="url(#pos-bg)"/>
+  <circle cx="680" cy="110" r="140" fill="#f59e0b" opacity="0.18"/>
+  <circle cx="120" cy="390" r="140" fill="#ea580c" opacity="0.15"/>
+
+  <g transform="translate(230, 25)">
+    <rect x="0" y="0" width="340" height="450" rx="36" fill="#140c06" stroke="#5c340f" stroke-width="3"/>
+    <rect x="8" y="8" width="324" height="434" rx="28" fill="#1d130a"/>
+    <rect x="110" y="14" width="104" height="20" rx="10" fill="#361f0c"/>
+
+    <text x="24" y="60" fill="#fbbf24" font-family="-apple-system, sans-serif" font-size="11" font-weight="700">POS & INVENTORY</text>
+    <text x="24" y="84" fill="#ffffff" font-family="-apple-system, sans-serif" font-size="18" font-weight="800">Cafe Terminal</text>
+
+    <!-- Menu Items Grid -->
+    <rect x="20" y="100" width="134" height="85" rx="14" fill="url(#pos-card)" stroke="rgba(255,255,255,0.08)"/>
+    <text x="32" y="122" fill="#fed7aa" font-family="-apple-system, sans-serif" font-size="11" font-weight="600">Espresso Roast</text>
+    <text x="32" y="144" fill="#ffffff" font-family="-apple-system, sans-serif" font-size="16" font-weight="800">$3.80</text>
+    <rect x="32" y="154" width="68" height="18" rx="9" fill="rgba(245,158,11,0.2)"/>
+    <text x="42" y="167" fill="#fbbf24" font-family="-apple-system, sans-serif" font-size="9" font-weight="700">Stock: 48</text>
+
+    <rect x="168" y="100" width="136" height="85" rx="14" fill="url(#pos-card)" stroke="rgba(255,255,255,0.08)"/>
+    <text x="180" y="122" fill="#fed7aa" font-family="-apple-system, sans-serif" font-size="11" font-weight="600">Caramel Latte</text>
+    <text x="180" y="144" fill="#ffffff" font-family="-apple-system, sans-serif" font-size="16" font-weight="800">$4.50</text>
+    <rect x="180" y="154" width="68" height="18" rx="9" fill="rgba(245,158,11,0.2)"/>
+    <text x="190" y="167" fill="#fbbf24" font-family="-apple-system, sans-serif" font-size="9" font-weight="700">Stock: 26</text>
+
+    <rect x="20" y="195" width="134" height="85" rx="14" fill="url(#pos-card)" stroke="rgba(255,255,255,0.08)"/>
+    <text x="32" y="217" fill="#fed7aa" font-family="-apple-system, sans-serif" font-size="11" font-weight="600">Cappuccino</text>
+    <text x="32" y="239" fill="#ffffff" font-family="-apple-system, sans-serif" font-size="16" font-weight="800">$4.20</text>
+    <rect x="32" y="249" width="68" height="18" rx="9" fill="rgba(245,158,11,0.2)"/>
+    <text x="42" y="262" fill="#fbbf24" font-family="-apple-system, sans-serif" font-size="9" font-weight="700">Stock: 35</text>
+
+    <rect x="168" y="195" width="136" height="85" rx="14" fill="url(#pos-card)" stroke="rgba(255,255,255,0.08)"/>
+    <text x="180" y="217" fill="#fed7aa" font-family="-apple-system, sans-serif" font-size="11" font-weight="600">Cold Brew</text>
+    <text x="180" y="239" fill="#ffffff" font-family="-apple-system, sans-serif" font-size="16" font-weight="800">$4.00</text>
+    <rect x="180" y="249" width="68" height="18" rx="9" fill="rgba(245,158,11,0.2)"/>
+    <text x="190" y="262" fill="#fbbf24" font-family="-apple-system, sans-serif" font-size="9" font-weight="700">Stock: 19</text>
+
+    <!-- Order Cart Bar -->
+    <rect x="20" y="295" width="284" height="120" rx="16" fill="rgba(245,158,11,0.15)" stroke="rgba(245,158,11,0.3)"/>
+    <text x="36" y="322" fill="#ffffff" font-family="-apple-system, sans-serif" font-size="13" font-weight="700">Active Order #1042</text>
+    <text x="36" y="342" fill="#fdba74" font-family="-apple-system, sans-serif" font-size="11">2x Caramel Latte, 1x Espresso</text>
+    <text x="250" y="332" fill="#ffffff" font-family="-apple-system, sans-serif" font-size="18" font-weight="800">$12.80</text>
+
+    <rect x="36" y="362" width="252" height="38" rx="12" fill="#f59e0b"/>
+    <text x="162" y="386" text-anchor="middle" fill="#1c1208" font-family="-apple-system, sans-serif" font-size="12" font-weight="700">Process Checkout & Sync</text>
+  </g>
+</svg>

@@ -1,0 +1,110 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500" width="800" height="500">
+  <defs>
+    <linearGradient id="sb-bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0b0f19"/>
+      <stop offset="50%" stop-color="#111827"/>
+      <stop offset="100%" stop-color="#1f2937"/>
+    </linearGradient>
+    <linearGradient id="sb-purple" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#8b5cf6"/>
+      <stop offset="100%" stop-color="#6366f1"/>
+    </linearGradient>
+    <linearGradient id="sb-cyan" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#06b6d4"/>
+      <stop offset="100%" stop-color="#3b82f6"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background Canvas -->
+  <rect width="800" height="500" fill="url(#sb-bg)"/>
+  <!-- Grid Dots -->
+  <g fill="#374151" opacity="0.4">
+    <circle cx="50" cy="50" r="1.5"/><circle cx="100" cy="50" r="1.5"/><circle cx="150" cy="50" r="1.5"/><circle cx="200" cy="50" r="1.5"/>
+    <circle cx="250" cy="50" r="1.5"/><circle cx="300" cy="50" r="1.5"/><circle cx="350" cy="50" r="1.5"/><circle cx="400" cy="50" r="1.5"/>
+    <circle cx="450" cy="50" r="1.5"/><circle cx="500" cy="50" r="1.5"/><circle cx="550" cy="50" r="1.5"/><circle cx="600" cy="50" r="1.5"/>
+    <circle cx="650" cy="50" r="1.5"/><circle cx="700" cy="50" r="1.5"/><circle cx="750" cy="50" r="1.5"/>
+    
+    <circle cx="50" cy="150" r="1.5"/><circle cx="100" cy="150" r="1.5"/><circle cx="150" cy="150" r="1.5"/><circle cx="200" cy="150" r="1.5"/>
+    <circle cx="250" cy="150" r="1.5"/><circle cx="300" cy="150" r="1.5"/><circle cx="350" cy="150" r="1.5"/><circle cx="400" cy="150" r="1.5"/>
+    <circle cx="450" cy="150" r="1.5"/><circle cx="500" cy="150" r="1.5"/><circle cx="550" cy="150" r="1.5"/><circle cx="600" cy="150" r="1.5"/>
+    <circle cx="650" cy="150" r="1.5"/><circle cx="700" cy="150" r="1.5"/><circle cx="750" cy="150" r="1.5"/>
+
+    <circle cx="50" cy="250" r="1.5"/><circle cx="100" cy="250" r="1.5"/><circle cx="150" cy="250" r="1.5"/><circle cx="200" cy="250" r="1.5"/>
+    <circle cx="250" cy="250" r="1.5"/><circle cx="300" cy="250" r="1.5"/><circle cx="350" cy="250" r="1.5"/><circle cx="400" cy="250" r="1.5"/>
+    <circle cx="450" cy="250" r="1.5"/><circle cx="500" cy="250" r="1.5"/><circle cx="550" cy="250" r="1.5"/><circle cx="600" cy="250" r="1.5"/>
+    <circle cx="650" cy="250" r="1.5"/><circle cx="700" cy="250" r="1.5"/><circle cx="750" cy="250" r="1.5"/>
+
+    <circle cx="50" cy="350" r="1.5"/><circle cx="100" cy="350" r="1.5"/><circle cx="150" cy="350" r="1.5"/><circle cx="200" cy="350" r="1.5"/>
+    <circle cx="250" cy="350" r="1.5"/><circle cx="300" cy="350" r="1.5"/><circle cx="350" cy="350" r="1.5"/><circle cx="400" cy="350" r="1.5"/>
+    <circle cx="450" cy="350" r="1.5"/><circle cx="500" cy="350" r="1.5"/><circle cx="550" cy="350" r="1.5"/><circle cx="600" cy="350" r="1.5"/>
+    <circle cx="650" cy="350" r="1.5"/><circle cx="700" cy="350" r="1.5"/><circle cx="750" cy="350" r="1.5"/>
+
+    <circle cx="50" cy="450" r="1.5"/><circle cx="100" cy="450" r="1.5"/><circle cx="150" cy="450" r="1.5"/><circle cx="200" cy="450" r="1.5"/>
+    <circle cx="250" cy="450" r="1.5"/><circle cx="300" cy="450" r="1.5"/><circle cx="350" cy="450" r="1.5"/><circle cx="400" cy="450" r="1.5"/>
+    <circle cx="450" cy="450" r="1.5"/><circle cx="500" cy="450" r="1.5"/><circle cx="550" cy="450" r="1.5"/><circle cx="600" cy="450" r="1.5"/>
+    <circle cx="650" cy="450" r="1.5"/><circle cx="700" cy="450" r="1.5"/><circle cx="750" cy="450" r="1.5"/>
+  </g>
+
+  <!-- Browser Frame Header -->
+  <g transform="translate(40, 25)">
+    <rect width="720" height="450" rx="14" fill="#0f172a" stroke="#1e293b" stroke-width="2"/>
+    <rect width="720" height="42" rx="14" fill="#1e293b"/>
+    <circle cx="24" cy="21" r="5" fill="#ef4444"/>
+    <circle cx="40" cy="21" r="5" fill="#f59e0b"/>
+    <circle cx="56" cy="21" r="5" fill="#10b981"/>
+    <!-- URL Bar -->
+    <rect x="180" y="9" width="360" height="24" rx="6" fill="#0f172a"/>
+    <text x="210" y="25" fill="#94a3b8" font-family="-apple-system, sans-serif" font-size="11">snapback-conversation-builder.lovable.app</text>
+
+    <!-- Top Canvas Toolbar -->
+    <rect x="0" y="42" width="720" height="46" fill="#111827"/>
+    <text x="25" y="71" fill="#818cf8" font-family="-apple-system, sans-serif" font-size="14" font-weight="800">Snapback <tspan fill="#ffffff">Conversation Builder</tspan></text>
+    <rect x="580" y="52" width="115" height="26" rx="6" fill="url(#sb-purple)"/>
+    <text x="637" y="69" text-anchor="middle" fill="#ffffff" font-family="-apple-system, sans-serif" font-size="11" font-weight="700">Deploy Flow</text>
+
+    <!-- Connectors (Bezier Curves) -->
+    <path d="M 180 180 C 230 180, 230 150, 280 150" fill="none" stroke="#6366f1" stroke-width="3"/>
+    <path d="M 180 180 C 230 180, 230 290, 280 290" fill="none" stroke="#6366f1" stroke-width="3"/>
+    <path d="M 440 150 C 490 150, 490 200, 530 200" fill="none" stroke="#06b6d4" stroke-width="3"/>
+    <path d="M 440 290 C 490 290, 490 220, 530 220" fill="none" stroke="#10b981" stroke-width="3"/>
+
+    <!-- Node 1: Trigger -->
+    <rect x="30" y="140" width="150" height="80" rx="10" fill="#1e293b" stroke="#6366f1" stroke-width="2"/>
+    <rect x="30" y="140" width="150" height="26" rx="10" fill="url(#sb-purple)"/>
+    <text x="42" y="157" fill="#ffffff" font-family="-apple-system, sans-serif" font-size="11" font-weight="700">⚡ User Message</text>
+    <text x="42" y="184" fill="#94a3b8" font-family="-apple-system, sans-serif" font-size="10">Trigger: On Inbound</text>
+    <text x="42" y="202" fill="#c7d2fe" font-family="-apple-system, sans-serif" font-size="10 font-weight="600">WhatsApp / Web</text>
+    <circle cx="180" cy="180" r="5" fill="#6366f1"/>
+
+    <!-- Node 2: Intent Classifier (Top Branch) -->
+    <rect x="280" y="105" width="160" height="90" rx="10" fill="#1e293b" stroke="#06b6d4" stroke-width="2"/>
+    <rect x="280" y="105" width="160" height="26" rx="10" fill="url(#sb-cyan)"/>
+    <text x="292" y="122" fill="#ffffff" font-family="-apple-system, sans-serif" font-size="11" font-weight="700">🧠 Intent Classifier</text>
+    <text x="292" y="150" fill="#94a3b8" font-family="-apple-system, sans-serif" font-size="10">AI Model: Gemini / GPT</text>
+    <text x="292" y="168" fill="#7dd3fc" font-family="-apple-system, sans-serif" font-size="10">Match: "Inquire Services"</text>
+    <circle cx="280" cy="150" r="5" fill="#6366f1"/>
+    <circle cx="440" cy="150" r="5" fill="#06b6d4"/>
+
+    <!-- Node 3: Conditional Filter (Bottom Branch) -->
+    <rect x="280" y="245" width="160" height="90" rx="10" fill="#1e293b" stroke="#f59e0b" stroke-width="2"/>
+    <rect x="280" y="245" width="160" height="26" rx="10" fill="#d97706"/>
+    <text x="292" y="262" fill="#ffffff" font-family="-apple-system, sans-serif" font-size="11" font-weight="700">⚖️ Condition Check</text>
+    <text x="292" y="290" fill="#94a3b8" font-family="-apple-system, sans-serif" font-size="10">User VIP Status == true</text>
+    <text x="292" y="308" fill="#fde68a" font-family="-apple-system, sans-serif" font-size="10">Branch: Priority Queue</text>
+    <circle cx="280" cy="290" r="5" fill="#6366f1"/>
+    <circle cx="440" cy="290" r="5" fill="#10b981"/>
+
+    <!-- Node 4: Dynamic Response Action -->
+    <rect x="530" y="165" width="160" height="95" rx="10" fill="#1e293b" stroke="#10b981" stroke-width="2"/>
+    <rect x="530" y="165" width="160" height="26" rx="10" fill="#059669"/>
+    <text x="542" y="182" fill="#ffffff" font-family="-apple-system, sans-serif" font-size="11" font-weight="700">💬 AI Response Generator</text>
+    <text x="542" y="210" fill="#94a3b8" font-family="-apple-system, sans-serif" font-size="10">Dynamic Template Reply</text>
+    <text x="542" y="228" fill="#a7f3d0" font-family="-apple-system, sans-serif" font-size="10">Status: Automated 200 OK</text>
+    <circle cx="530" cy="210" r="5" fill="#10b981"/>
+
+    <!-- Bottom Status Bar -->
+    <rect x="0" y="390" width="720" height="60" fill="#0b132b"/>
+    <text x="25" y="425" fill="#94a3b8" font-family="-apple-system, sans-serif" font-size="11">Visual Flow Status: <tspan fill="#10b981" font-weight="700">Active · 4 Nodes Verified</tspan></text>
+    <text x="520" y="425" fill="#6366f1" font-family="-apple-system, sans-serif" font-size="11" font-weight="600">Zoom: 100% | Snap to Grid: ON</text>
+  </g>
+</svg>

@@ -1,0 +1,76 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500" width="800" height="500">
+  <defs>
+    <linearGradient id="cafe-bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#181310"/>
+      <stop offset="60%" stop-color="#2a1b12"/>
+      <stop offset="100%" stop-color="#431407"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="800" height="500" fill="url(#cafe-bg)"/>
+  <circle cx="700" cy="100" r="160" fill="#ea580c" opacity="0.18"/>
+
+  <!-- Browser Window Frame -->
+  <g transform="translate(60, 40)">
+    <rect width="680" height="420" rx="16" fill="#0f172a" stroke="#334155" stroke-width="2"/>
+    <!-- Browser Top Bar -->
+    <rect width="680" height="40" rx="16" fill="#1e293b"/>
+    <circle cx="24" cy="20" r="5" fill="#ef4444"/>
+    <circle cx="40" cy="20" r="5" fill="#f59e0b"/>
+    <circle cx="56" cy="20" r="5" fill="#10b981"/>
+    <!-- URL Bar -->
+    <rect x="160" y="8" width="360" height="24" rx="6" fill="#0f172a"/>
+    <text x="180" y="24" fill="#94a3b8" font-family="-apple-system, sans-serif" font-size="11">cafeteria-management-main.firebaseapp.com</text>
+
+    <!-- Web App Navbar -->
+    <rect x="0" y="40" width="680" height="48" fill="#111827"/>
+    <text x="30" y="70" fill="#f97316" font-family="-apple-system, sans-serif" font-size="14" font-weight="800">CampusCafé</text>
+    <text x="160" y="70" fill="#ffffff" font-family="-apple-system, sans-serif" font-size="12">Menu</text>
+    <text x="220" y="70" fill="#94a3b8" font-family="-apple-system, sans-serif" font-size="12">Orders</text>
+    <text x="280" y="70" fill="#94a3b8" font-family="-apple-system, sans-serif" font-size="12">Inventory</text>
+    <rect x="560" y="52" width="90" height="26" rx="6" fill="#f97316"/>
+    <text x="605" y="69" text-anchor="middle" fill="#ffffff" font-family="-apple-system, sans-serif" font-size="11" font-weight="700">Cart (3)</text>
+
+    <!-- Main Content Area -->
+    <!-- Hero / Banner -->
+    <rect x="30" y="104" width="410" height="80" rx="12" fill="rgba(249,115,22,0.12)" stroke="rgba(249,115,22,0.25)"/>
+    <text x="50" y="132" fill="#ffffff" font-family="-apple-system, sans-serif" font-size="16" font-weight="700">Real-Time Cafeteria Order System</text>
+    <text x="50" y="154" fill="#fdba74" font-family="-apple-system, sans-serif" font-size="12">Firebase Cloud sync · Instant kitchen notifications</text>
+
+    <!-- Sidebar Order Queue -->
+    <rect x="460" y="104" width="190" height="290" rx="12" fill="#1e293b"/>
+    <text x="475" y="130" fill="#ffffff" font-family="-apple-system, sans-serif" font-size="12" font-weight="700">Live Kitchen Queue</text>
+    <rect x="475" y="145" width="160" height="60" rx="8" fill="#0f172a"/>
+    <text x="485" y="165" fill="#f97316" font-family="-apple-system, sans-serif" font-size="10" font-weight="700">Order #312 · Preparing</text>
+    <text x="485" y="180" fill="#94a3b8" font-family="-apple-system, sans-serif" font-size="10">2x Club Sandwich, 1x Tea</text>
+
+    <rect x="475" y="215" width="160" height="60" rx="8" fill="#0f172a"/>
+    <text x="485" y="235" fill="#10b981" font-family="-apple-system, sans-serif" font-size="10" font-weight="700">Order #311 · Ready</text>
+    <text x="485" y="250" fill="#94a3b8" font-family="-apple-system, sans-serif" font-size="10">1x Crispy Burger Meal</text>
+
+    <!-- Food Cards -->
+    <rect x="30" y="200" width="125" height="194" rx="10" fill="#1e293b"/>
+    <rect x="40" y="210" width="105" height="85" rx="8" fill="#334155"/>
+    <circle cx="92" cy="252" r="24" fill="#f97316" opacity="0.6"/>
+    <text x="42" y="315" fill="#ffffff" font-family="-apple-system, sans-serif" font-size="11" font-weight="700">Zinger Burger</text>
+    <text x="42" y="332" fill="#f97316" font-family="-apple-system, sans-serif" font-size="13" font-weight="800">$4.50</text>
+    <rect x="42" y="348" width="101" height="28" rx="6" fill="#f97316"/>
+    <text x="92" y="366" text-anchor="middle" fill="#ffffff" font-family="-apple-system, sans-serif" font-size="11" font-weight="600">+ Add</text>
+
+    <rect x="170" y="200" width="125" height="194" rx="10" fill="#1e293b"/>
+    <rect x="180" y="210" width="105" height="85" rx="8" fill="#334155"/>
+    <circle cx="232" cy="252" r="24" fill="#f59e0b" opacity="0.6"/>
+    <text x="182" y="315" fill="#ffffff" font-family="-apple-system, sans-serif" font-size="11" font-weight="700">Club Sandwich</text>
+    <text x="182" y="332" fill="#f97316" font-family="-apple-system, sans-serif" font-size="13" font-weight="800">$3.80</text>
+    <rect x="182" y="348" width="101" height="28" rx="6" fill="#f97316"/>
+    <text x="232" y="366" text-anchor="middle" fill="#ffffff" font-family="-apple-system, sans-serif" font-size="11" font-weight="600">+ Add</text>
+
+    <rect x="310" y="200" width="130" height="194" rx="10" fill="#1e293b"/>
+    <rect x="320" y="210" width="110" height="85" rx="8" fill="#334155"/>
+    <circle cx="375" cy="252" r="24" fill="#06b6d4" opacity="0.6"/>
+    <text x="322" y="315" fill="#ffffff" font-family="-apple-system, sans-serif" font-size="11" font-weight="700">Fresh Mocktail</text>
+    <text x="322" y="332" fill="#f97316" font-family="-apple-system, sans-serif" font-size="13" font-weight="800">$2.50</text>
+    <rect x="322" y="348" width="106" height="28" rx="6" fill="#f97316"/>
+    <text x="375" y="366" text-anchor="middle" fill="#ffffff" font-family="-apple-system, sans-serif" font-size="11" font-weight="600">+ Add</text>
+  </g>
+</svg>
