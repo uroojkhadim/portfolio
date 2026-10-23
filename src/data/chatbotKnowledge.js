@@ -318,7 +318,7 @@ You can also visit the [Resume](#resume) section to preview the documents intera
     q.includes('college') ||
     q.includes('academic')
   ) {
-    return `Urooj Khadim is pursuing her **Bachelor of Software Engineering (BS SE)** at **COMSATS University Islamabad, Vehari Campus**.
+    return `Urooj Khadim is pursuing her **Bachelor of Software Engineering (BS SE)** at **COMSATS University Islamabad, Vehari Campus** (2023 – 2027).
 
 Her relevant coursework includes Object-Oriented Programming, Data Structures & Algorithms, Mobile App Development, Web & Advanced Web Development, Software Quality Engineering (SQE), and Database Management Systems.
 
