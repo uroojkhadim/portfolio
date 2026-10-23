@@ -384,14 +384,13 @@ Over the course of my academic and practical career, I have developed full-stack
   const existingEdu = db.prepare('SELECT COUNT(*) as cnt FROM education').get()
   if (existingEdu.cnt === 0) {
     db.prepare(`INSERT INTO education 
-      (institution, degree, field_of_study, start_date, end_date, is_current, description, status_label, display_order)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`).run(
+      (institution, degree, field_of_study, start_date, is_current, description, status_label, display_order)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)`).run(
       'COMSATS University Islamabad, Vehari Campus',
       'Bachelor of Software Engineering (BS SE)',
       'Software Engineering',
       '2023',
-      '2027',
-      0,
+      1,
       'Pursuing a comprehensive curriculum in software engineering, combining foundational computing theory with practical development across web, mobile, and intelligent systems.',
       'Senior Student · Currently Enrolled',
       0

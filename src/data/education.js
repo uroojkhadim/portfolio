@@ -3,7 +3,7 @@ export const educationData = {
   institution: 'COMSATS University Islamabad, Vehari Campus',
   campus: 'Vehari Campus, Pakistan',
   status: 'Senior Student · Currently Enrolled',
-  duration: '2023 – 2027',
+  duration: '2023 – Present',
   description:
     'Pursuing a comprehensive curriculum in software engineering, combining foundational computing theory with practical development across web, mobile, and intelligent systems.',
   courseworkCategories: [
