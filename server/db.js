@@ -1,22 +1,29 @@
 /**
  * SQLite Database Layer — Portfolio CMS
  * Uses better-sqlite3 (synchronous, zero-config, file-based)
+ *
+ * The database is the single source of truth for every public section and for
+ * the admin panel. On first run it is seeded from the portfolio's verified
+ * content; existing rows are never overwritten.
  */
 import Database from 'better-sqlite3'
 import bcrypt from 'bcryptjs'
 import path from 'path'
 import { fileURLToPath } from 'url'
 import fs from 'fs'
+import { patchFreelanceTables } from './db/freelance-tables.js'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
 const isServerless = Boolean(process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME || process.env.NETLIFY)
 
-let DATA_DIR = path.join(__dirname, 'data')
+let DATA_DIR = process.env.DATA_DIR
+  ? path.resolve(process.env.DATA_DIR)
+  : path.join(__dirname, 'data')
 let DB_PATH = path.join(DATA_DIR, 'portfolio.db')
 
-if (isServerless) {
+if (isServerless && !process.env.DATA_DIR) {
   DATA_DIR = '/tmp/portfolio-data'
   DB_PATH = path.join(DATA_DIR, 'portfolio.db')
 }
@@ -81,6 +88,8 @@ db.exec(`
     bio TEXT,
     hero_heading TEXT,
     hero_description TEXT,
+    about_heading TEXT,
+    about_description TEXT,
     availability_status TEXT DEFAULT 'Available for Remote Roles & Internships',
     availability_active INTEGER DEFAULT 1,
     profile_image TEXT DEFAULT '/profile.png',
@@ -134,9 +143,11 @@ db.exec(`
     end_date TEXT,
     is_current INTEGER DEFAULT 0,
     description TEXT,
+    responsibilities TEXT,
     skills_list TEXT DEFAULT '[]',
     certificate_url TEXT,
     certificate_type TEXT DEFAULT 'pdf',
+    company_logo TEXT,
     featured INTEGER DEFAULT 0,
     display_order INTEGER DEFAULT 0,
     published INTEGER DEFAULT 1,
@@ -148,6 +159,7 @@ db.exec(`
     institution TEXT NOT NULL,
     degree TEXT NOT NULL,
     field_of_study TEXT,
+    campus TEXT,
     start_date TEXT,
     end_date TEXT,
     is_current INTEGER DEFAULT 0,
@@ -204,6 +216,31 @@ db.exec(`
     created_at TEXT DEFAULT (datetime('now'))
   );
 
+  CREATE TABLE IF NOT EXISTS services (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    title TEXT NOT NULL,
+    description TEXT,
+    icon_name TEXT DEFAULT 'Code2',
+    technologies TEXT DEFAULT '[]',
+    availability TEXT DEFAULT 'Available',
+    display_order INTEGER DEFAULT 0,
+    published INTEGER DEFAULT 1,
+    created_at TEXT DEFAULT (datetime('now')),
+    updated_at TEXT DEFAULT (datetime('now'))
+  );
+
+  CREATE TABLE IF NOT EXISTS chatbot_knowledge (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    topic TEXT NOT NULL,
+    question TEXT,
+    answer TEXT NOT NULL,
+    keywords TEXT DEFAULT '[]',
+    display_order INTEGER DEFAULT 0,
+    published INTEGER DEFAULT 1,
+    created_at TEXT DEFAULT (datetime('now')),
+    updated_at TEXT DEFAULT (datetime('now'))
+  );
+
   CREATE TABLE IF NOT EXISTS contact_messages (
     id TEXT PRIMARY KEY,
     name TEXT NOT NULL,
@@ -212,21 +249,46 @@ db.exec(`
     message TEXT NOT NULL,
     status TEXT DEFAULT 'unread',
     client_ip TEXT,
+    notification_status TEXT,
+    notification_error TEXT,
     created_at TEXT DEFAULT (datetime('now')),
     replied_at TEXT,
     archived_at TEXT
   );
 `)
 
+// ─── Lightweight migrations for existing databases ────────────────────────────
+
+function ensureColumn(table, column, definition) {
+  try {
+    const columns = db.prepare(`PRAGMA table_info(${table})`).all()
+    if (!columns.some(c => c.name === column)) {
+      db.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${definition}`)
+      console.log(`[DB] Added column ${table}.${column}`)
+    }
+  } catch (err) {
+    console.warn(`[DB] Migration notice for ${table}.${column}:`, err.message)
+  }
+}
+
+ensureColumn('about_content', 'about_heading', 'TEXT')
+ensureColumn('about_content', 'about_description', 'TEXT')
+ensureColumn('experience', 'responsibilities', 'TEXT')
+ensureColumn('experience', 'company_logo', 'TEXT')
+ensureColumn('education', 'campus', 'TEXT')
+ensureColumn('contact_messages', 'notification_status', 'TEXT')
+ensureColumn('contact_messages', 'notification_error', 'TEXT')
+
 // ─── Seed Data ────────────────────────────────────────────────────────────────
 
 function seedDatabase() {
-  // Admin user
-  const existingAdmin = db.prepare('SELECT id FROM admin_users WHERE email = ?').get('uroojkhadim505@gmail.com')
+  // Admin user (credentials can be overridden by environment variables)
+  const adminEmail = (process.env.ADMIN_EMAIL || 'uroojkhadim505@gmail.com').trim().toLowerCase()
+  const existingAdmin = db.prepare('SELECT id FROM admin_users WHERE email = ?').get(adminEmail)
   if (!existingAdmin) {
-    const hash = bcrypt.hashSync('khadim123', 12)
+    const hash = bcrypt.hashSync(process.env.ADMIN_DEFAULT_PASSWORD || 'khadim123', 12)
     db.prepare('INSERT INTO admin_users (email, password_hash, name) VALUES (?, ?, ?)').run(
-      'uroojkhadim505@gmail.com', hash, 'Urooj Khadim'
+      adminEmail, hash, 'Urooj Khadim'
     )
     console.log('[DB] Admin user created.')
   }
@@ -242,6 +304,8 @@ function seedDatabase() {
     { key: 'seo_keywords', value: 'Urooj Khadim, Software Engineer, Web Developer, React, Flutter, Portfolio' },
     { key: 'navbar_brand', value: 'UK' },
     { key: 'chatbot_enabled', value: '1' },
+    { key: 'chatbot_greeting', value: "Hello! I'm Urooj Khadim's portfolio assistant. Ask me about her skills, services, projects, experience, or how to get in touch." },
+    { key: 'chatbot_suggestions', value: 'What programming languages does Urooj know?\nWhat services can Urooj provide?\nHas Urooj developed any websites?\nDoes Urooj have internship experience?\nCan I hire Urooj?' },
   ]
   const insertSetting = db.prepare('INSERT OR IGNORE INTO site_settings (key, value) VALUES (?, ?)')
   defaultSettings.forEach(s => insertSetting.run(s.key, s.value))
@@ -250,8 +314,8 @@ function seedDatabase() {
   const existingAbout = db.prepare('SELECT id FROM about_content LIMIT 1').get()
   if (!existingAbout) {
     db.prepare(`INSERT INTO about_content 
-      (name, title, role, bio, hero_heading, hero_description, availability_status, availability_active, profile_image, university, degree, location)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`).run(
+      (name, title, role, bio, hero_heading, hero_description, about_heading, about_description, availability_status, availability_active, profile_image, university, degree, location)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`).run(
       'Urooj Khadim',
       'Software Engineering Student',
       'Full Stack / Web & Mobile Developer',
@@ -260,6 +324,8 @@ function seedDatabase() {
 Over the course of my academic and practical career, I have developed full-stack web applications using React, modern JavaScript, and RESTful backends, alongside cross-platform mobile apps using Flutter and Dart.`,
       "Hi, I'm Urooj Khadim",
       'Passionate about building responsive web applications, cross-platform Flutter mobile solutions, and intelligent digital tools.',
+      'Engineering thoughtful digital experiences',
+      'A dedicated Software Engineering student combining computer science foundations with hands-on web, mobile, and intelligent systems development.',
       'Available for Remote Roles & Internships',
       1,
       '/profile.png',
@@ -273,15 +339,28 @@ Over the course of my academic and practical career, I have developed full-stack
   // Contact Info
   const contactItems = [
     { key: 'email', label: 'Email', value: 'uroojkhadim505@gmail.com', href: 'mailto:uroojkhadim505@gmail.com', visible: 1, display_order: 0 },
-    { key: 'phone', label: 'Phone / WhatsApp', value: '0313-6576128', href: 'tel:03136576128', visible: 1, display_order: 1 },
-    { key: 'github', label: 'GitHub', value: 'github.com/uroojkhadim', href: 'https://github.com/uroojkhadim', visible: 1, display_order: 2 },
-    { key: 'linkedin', label: 'LinkedIn', value: 'Connect on LinkedIn', href: 'https://www.linkedin.com/in/urooj-khadim-26a334364', visible: 1, display_order: 3 },
-    { key: 'location', label: 'Location', value: 'Vehari, Pakistan', href: null, visible: 1, display_order: 4 },
-    { key: 'contact_heading', label: 'Contact Heading', value: "Let's build something exceptional", href: null, visible: 1, display_order: 5 },
-    { key: 'contact_description', label: 'Contact Description', value: 'Have an internship opportunity, project collaboration, or inquiry? Send a message directly and I\'ll be notified in real time.', href: null, visible: 1, display_order: 6 },
+    { key: 'phone', label: 'Phone', value: '+92 313 6576128', href: 'tel:+923136576128', visible: 1, display_order: 1 },
+    { key: 'whatsapp', label: 'WhatsApp', value: '+92 313 6576128', href: 'https://wa.me/923136576128?text=Hello%20Urooj%2C%20I%20found%20your%20portfolio%20and%20would%20like%20to%20connect.', visible: 1, display_order: 2 },
+    { key: 'github', label: 'GitHub', value: 'github.com/uroojkhadim', href: 'https://github.com/uroojkhadim', visible: 1, display_order: 3 },
+    { key: 'linkedin', label: 'LinkedIn', value: 'linkedin.com/in/uroojkhadim', href: 'https://www.linkedin.com/in/uroojkhadim', visible: 1, display_order: 4 },
+    { key: 'location', label: 'Location', value: 'Vehari, Pakistan', href: null, visible: 1, display_order: 5 },
+    { key: 'contact_heading', label: 'Contact Heading', value: "Let's build something exceptional", href: null, visible: 1, display_order: 6 },
+    { key: 'contact_description', label: 'Contact Description', value: 'Have an internship opportunity, project collaboration, or inquiry? Send a message directly and I\'ll be notified in real time.', href: null, visible: 1, display_order: 7 },
   ]
   const insertContact = db.prepare('INSERT OR IGNORE INTO contact_info (key, label, value, href, visible, display_order) VALUES (?, ?, ?, ?, ?, ?)')
   contactItems.forEach(c => insertContact.run(c.key, c.label, c.value, c.href, c.visible, c.display_order))
+
+  // Repair known-bad links / labels created by earlier versions of the seed.
+  // Only values that are clearly wrong or missing a scheme are corrected.
+  try {
+    db.prepare("UPDATE contact_info SET value='linkedin.com/in/uroojkhadim', href='https://www.linkedin.com/in/uroojkhadim' WHERE key='linkedin' AND (href LIKE '%urooj-khadim-26a334364%' OR href='' OR href IS NULL OR href NOT LIKE 'http%')").run()
+    db.prepare("UPDATE contact_info SET href='https://github.com/uroojkhadim', value='github.com/uroojkhadim' WHERE key='github' AND (href='' OR href IS NULL OR href NOT LIKE 'http%')").run()
+    db.prepare("UPDATE contact_info SET href='mailto:uroojkhadim505@gmail.com' WHERE key='email' AND (href IS NULL OR href='')").run()
+    db.prepare("UPDATE contact_info SET href='tel:+923136576128', value='+92 313 6576128' WHERE key='phone' AND (href IS NULL OR href='' OR href LIKE 'tel:%')").run()
+    db.prepare("UPDATE contact_info SET key='whatsapp', label='WhatsApp' WHERE key='whatsapp'").run()
+  } catch (err) {
+    console.warn('[DB] Contact link repair notice:', err.message)
+  }
 
   // Skill Categories
   const existingCats = db.prepare('SELECT COUNT(*) as cnt FROM skill_categories').get()
@@ -353,6 +432,7 @@ Over the course of my academic and practical career, I have developed full-stack
         location: 'Lahore Division, Punjab, Pakistan', type: 'Professional Experience',
         start_date: '2026-07', end_date: '2026-08', is_current: 0,
         description: 'Learned Android development fundamentals, including Kotlin, Jetpack Compose, and XML-based UI layouts.',
+        responsibilities: 'Built Android screens with Kotlin and Jetpack Compose\nImplemented XML-based UI layouts\nPractised Android development fundamentals',
         skills_list: JSON.stringify(['Android Development', 'Kotlin', 'Jetpack Compose', 'XML Layouts']),
         display_order: 0
       },
@@ -361,6 +441,7 @@ Over the course of my academic and practical career, I have developed full-stack
         location: 'Remote', type: 'Professional Experience',
         start_date: '2026-03', end_date: '2026-07', is_current: 0,
         description: 'Worked in a frontend development role, building and refining user-facing web interfaces.',
+        responsibilities: 'Built and refined user-facing web interfaces\nWorked with modern frontend tooling and responsive layouts',
         skills_list: JSON.stringify(['Frontend Development', 'Web Interfaces', 'HTML/CSS', 'JavaScript']),
         display_order: 1
       },
@@ -369,14 +450,15 @@ Over the course of my academic and practical career, I have developed full-stack
         location: 'Remote', type: 'Internship',
         start_date: '2025-12', end_date: '2026-04', is_current: 0,
         description: 'Gained internship experience in Android application development and mobile app workflows.',
+        responsibilities: 'Contributed to Android application development\nLearned mobile app development workflows and UI design',
         skills_list: JSON.stringify(['Android Development', 'Mobile App Workflows', 'Kotlin', 'UI Design']),
         display_order: 2
       },
     ]
     const insertExp = db.prepare(`INSERT INTO experience 
-      (company, role, location, type, start_date, end_date, is_current, description, skills_list, display_order)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
-    exps.forEach(e => insertExp.run(e.company, e.role, e.location, e.type, e.start_date, e.end_date, e.is_current, e.description, e.skills_list, e.display_order))
+      (company, role, location, type, start_date, end_date, is_current, description, responsibilities, skills_list, display_order)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
+    exps.forEach(e => insertExp.run(e.company, e.role, e.location, e.type, e.start_date, e.end_date, e.is_current, e.description, e.responsibilities, e.skills_list, e.display_order))
     console.log('[DB] Experience seeded.')
   }
 
@@ -384,11 +466,12 @@ Over the course of my academic and practical career, I have developed full-stack
   const existingEdu = db.prepare('SELECT COUNT(*) as cnt FROM education').get()
   if (existingEdu.cnt === 0) {
     db.prepare(`INSERT INTO education 
-      (institution, degree, field_of_study, start_date, is_current, description, status_label, display_order)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)`).run(
+      (institution, degree, field_of_study, campus, start_date, is_current, description, status_label, display_order)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`).run(
       'COMSATS University Islamabad, Vehari Campus',
       'Bachelor of Software Engineering (BS SE)',
       'Software Engineering',
+      'Vehari Campus, Pakistan',
       '2023',
       1,
       'Pursuing a comprehensive curriculum in software engineering, combining foundational computing theory with practical development across web, mobile, and intelligent systems.',
@@ -436,6 +519,54 @@ Over the course of my academic and practical career, I have developed full-stack
     console.log('[DB] Documents seeded.')
   }
 
+  // Services
+  const existingServices = db.prepare('SELECT COUNT(*) as cnt FROM services').get()
+  if (existingServices.cnt === 0) {
+    const services = [
+      { title: 'Website Development', description: 'Professional, responsive websites and web applications built with modern frontend and backend technologies.', icon_name: 'Globe2', technologies: ['React', 'HTML5', 'CSS3', 'JavaScript', 'Laravel', 'REST APIs'], availability: 'Available' },
+      { title: 'Mobile App Development', description: 'Cross-platform Flutter applications and Android apps with clean architecture and polished interfaces.', icon_name: 'Smartphone', technologies: ['Flutter', 'Dart', 'Kotlin', 'Android'], availability: 'Available' },
+      { title: 'Frontend Development', description: 'Fast, accessible and responsive user interfaces with component-driven development and modern styling.', icon_name: 'Layout', technologies: ['React', 'JavaScript', 'Tailwind CSS', 'HTML/CSS'], availability: 'Available' },
+      { title: 'Digital Marketing', description: 'Digital growth support covering online presence, campaign planning and performance tracking.', icon_name: 'TrendingUp', technologies: ['Campaign Planning', 'Analytics', 'Content Strategy'], availability: 'Available' },
+      { title: 'Social Media Management', description: 'Consistent social media presence with content scheduling, community engagement and reporting.', icon_name: 'Share2', technologies: ['Content Creation', 'Scheduling', 'Engagement'], availability: 'Available' },
+      { title: 'SEO Optimization', description: 'Search engine optimization for better visibility, structured content and technical on-page improvements.', icon_name: 'Search', technologies: ['On-page SEO', 'Keyword Research', 'Technical SEO'], availability: 'Available' },
+      { title: 'Google Ads / PPC', description: 'Paid search campaign setup and optimization focused on measurable traffic and conversions.', icon_name: 'Target', technologies: ['Google Ads', 'PPC', 'Campaign Optimization'], availability: 'Available' },
+      { title: 'Graphic Design (Canva)', description: 'Clean visual assets, social graphics, and presentation designs created with Canva.', icon_name: 'Palette', technologies: ['Canva', 'Social Graphics', 'Presentation Design'], availability: 'Available' },
+      { title: 'Software Quality Assurance', description: 'Structured testing and quality checks to improve reliability, usability and release confidence.', icon_name: 'ShieldCheck', technologies: ['Manual Testing', 'Test Cases', 'Quality Reviews'], availability: 'Available' },
+      { title: 'Custom Software Solutions', description: 'Tailored software features and small business tools built around specific workflow requirements.', icon_name: 'Code2', technologies: ['Web Apps', 'Automation', 'Database Design'], availability: 'Available' },
+    ]
+    const insertService = db.prepare(`INSERT INTO services (title, description, icon_name, technologies, availability, display_order) VALUES (?, ?, ?, ?, ?, ?)`)
+    services.forEach((s, i) => insertService.run(s.title, s.description, s.icon_name, JSON.stringify(s.technologies), s.availability, i))
+    console.log('[DB] Services seeded.')
+  }
+
+  // Chatbot knowledge — admin-editable additions on top of CMS content
+  const existingChatbot = db.prepare('SELECT COUNT(*) as cnt FROM chatbot_knowledge').get()
+  if (existingChatbot.cnt === 0) {
+    const entries = [
+      {
+        topic: 'Hiring & collaboration',
+        question: 'Can I hire Urooj?',
+        answer: 'Yes — Urooj is available for freelance projects, internships, and remote software development roles. She can help with website development, Flutter/Android apps, frontend work, QA, and digital marketing. Share your requirements by email or WhatsApp and she will get back to you.',
+        keywords: ['hire', 'hiring', 'freelance', 'collaborate', 'collaboration', 'work with', 'available for']
+      },
+      {
+        topic: 'Availability',
+        question: 'Is Urooj available for remote work or internships?',
+        answer: 'Yes. Urooj is based in Vehari, Pakistan and is open to remote roles, internships, and freelance projects alongside her final year of Software Engineering at COMSATS University Islamabad (Vehari Campus).',
+        keywords: ['available', 'availability', 'remote', 'internship', 'location', 'relocate']
+      },
+      {
+        topic: 'Working style',
+        question: 'How does Urooj approach a project?',
+        answer: 'She starts by clarifying the requirements and scope, then builds in small, testable increments with clean, maintainable code. She values responsive interfaces, reliable data handling, and clear communication throughout the project.',
+        keywords: ['approach', 'process', 'work style', 'methodology', 'how does she work']
+      },
+    ]
+    const insertChat = db.prepare(`INSERT INTO chatbot_knowledge (topic, question, answer, keywords, display_order) VALUES (?, ?, ?, ?, ?)`)
+    entries.forEach((e, i) => insertChat.run(e.topic, e.question, e.answer, JSON.stringify(e.keywords), i))
+    console.log('[DB] Chatbot knowledge seeded.')
+  }
+
   // Migrate existing messages from messages.json into contact_messages table if empty
   try {
     const existingMsgs = db.prepare('SELECT COUNT(*) as cnt FROM contact_messages').get()
@@ -454,11 +585,24 @@ Over the course of my academic and practical career, I have developed full-stack
   } catch (err) {
     console.warn('[DB] Messages migration notice:', err.message)
   }
+
+  // Normalise legacy SQLite timestamps ("YYYY-MM-DD HH:MM:SS") to ISO 8601 so
+  // every browser parses them consistently.
+  try {
+    db.prepare("UPDATE contact_messages SET created_at = replace(created_at, ' ', 'T') || 'Z' WHERE created_at IS NOT NULL AND created_at NOT LIKE '%T%'").run()
+    db.prepare("UPDATE contact_messages SET replied_at = replace(replied_at, ' ', 'T') || 'Z' WHERE replied_at IS NOT NULL AND replied_at NOT LIKE '%T%'").run()
+    db.prepare("UPDATE contact_messages SET archived_at = replace(archived_at, ' ', 'T') || 'Z' WHERE archived_at IS NOT NULL AND archived_at NOT LIKE '%T%'").run()
+  } catch (err) {
+    console.warn('[DB] Timestamp normalisation notice:', err.message)
+  }
 }
 
 // Run seed
 try {
   seedDatabase()
+  // Create the freelancing tables and port the existing projects into the new
+  // dual-portfolio visibility columns before anything reads them.
+  patchFreelanceTables(db)
   console.log('[DB] Database initialized at', DB_PATH)
 } catch (err) {
   console.error('[DB] Seed error:', err.message)

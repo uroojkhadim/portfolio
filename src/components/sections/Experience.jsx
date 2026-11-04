@@ -136,9 +136,20 @@ function ExperienceTimelineCard({ item, index, onViewCertificate }) {
               <span className="inline-block rounded-md bg-indigo-50 px-2.5 py-0.5 text-[11px] font-semibold text-indigo-700 dark:bg-indigo-500/10 dark:text-indigo-300">
                 {item.type}
               </span>
-              <h3 className="mt-1.5 font-display text-lg font-bold text-slate-900 dark:text-white sm:text-xl">
-                {item.role}
-              </h3>
+              <div className="mt-1.5 flex items-center gap-2.5">
+                {item.companyLogo && (
+                  <img
+                    src={item.companyLogo}
+                    alt={`${item.company} logo`}
+                    loading="lazy"
+                    className="h-8 w-8 rounded-lg border border-slate-200/80 bg-white object-contain p-0.5 dark:border-slate-700"
+                    onError={(event) => { event.currentTarget.style.display = 'none' }}
+                  />
+                )}
+                <h3 className="font-display text-lg font-bold text-slate-900 dark:text-white sm:text-xl">
+                  {item.role}
+                </h3>
+              </div>
               <p className="flex items-center gap-1.5 text-sm font-semibold text-indigo-600 dark:text-indigo-400">
                 <Building2 size={15} />
                 {item.company}
@@ -162,6 +173,17 @@ function ExperienceTimelineCard({ item, index, onViewCertificate }) {
           <p className="mt-4 text-sm leading-relaxed text-slate-600 dark:text-slate-400">
             {item.description}
           </p>
+
+          {item.responsibilities && item.responsibilities.length > 0 && (
+            <ul className="mt-3 space-y-1.5">
+              {item.responsibilities.map((responsibility) => (
+                <li key={responsibility} className="flex items-start gap-2 text-xs text-slate-700 dark:text-slate-300">
+                  <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-indigo-500" />
+                  <span>{responsibility}</span>
+                </li>
+              ))}
+            </ul>
+          )}
 
           {item.skills && item.skills.length > 0 && (
             <div className="mt-4 flex flex-wrap gap-1.5">
@@ -201,9 +223,11 @@ export default function Experience() {
   const list = (liveExperiences && liveExperiences.length > 0)
     ? liveExperiences.map(e => ({
         ...e,
-        duration: e.duration || `${e.start_date || ''} - ${e.is_current ? 'Present' : (e.end_date || '')}`,
+        duration: e.duration || `${e.start_date || ''} – ${e.is_current ? 'Present' : (e.end_date || '')}`,
         certificateUrl: e.certificateUrl || e.certificate_url,
         certificateType: e.certificateType || e.certificate_type,
+        companyLogo: e.company_logo || e.companyLogo || null,
+        responsibilities: Array.isArray(e.responsibilities) ? e.responsibilities : [],
       }))
     : fallbackExperiences
 

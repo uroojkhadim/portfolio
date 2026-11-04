@@ -89,13 +89,13 @@ export default function Projects() {
   const handleChange = (field, value) => setModal(prev => ({ ...prev, data: { ...prev.data, [field]: value } }))
 
   const handleImageUpload = async (file) => {
-    if (!file || !modal?.data?.id) { toast('Save project first before uploading image.', 'error'); return }
+    if (!file) return
     setUploading(true)
     try {
-      const fd = new FormData(); fd.append('image', file)
-      const result = await apiFetch(`/api/admin/projects/${modal.data.id}/upload-image`, { method: 'POST', body: fd })
+      const fd = new FormData(); fd.append('file', file)
+      const result = await apiFetch('/api/admin/uploads/image?folder=projects', { method: 'POST', body: fd })
       handleChange('image', result.url)
-      toast('Image uploaded!')
+      toast('Image uploaded and attached. Save the project to publish it.')
     } catch (e) { toast(e.message, 'error') } finally { setUploading(false) }
   }
 

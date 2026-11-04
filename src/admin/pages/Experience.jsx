@@ -15,7 +15,11 @@ const EMPTY_EXP = {
   end_date: '',
   is_current: false,
   description: '',
+  responsibilities: '',
   skills: '',
+  certificate_url: '',
+  certificate_type: 'pdf',
+  company_logo: '',
   featured: false,
   display_order: 0,
   published: true
@@ -44,6 +48,7 @@ export default function Experience() {
   const [confirm, setConfirm] = useState(null)
   const [saving, setSaving] = useState(false)
   const [uploadingCert, setUploadingCert] = useState(false)
+  const [uploadingLogo, setUploadingLogo] = useState(false)
 
   const load = () => {
     get('/api/admin/experience')
@@ -66,22 +71,35 @@ export default function Experience() {
   const handleChange = (field, value) => setModal(prev => ({ ...prev, data: { ...prev.data, [field]: value } }))
 
   const handleCertificateUpload = async (file) => {
-    if (!file || !modal?.data?.id) {
-      toast('Save experience record before uploading certificate.', 'error')
-      return
-    }
+    if (!file) return
     setUploadingCert(true)
     try {
       const fd = new FormData()
-      fd.append('certificate', file)
-      const res = await apiFetch(`/api/admin/experience/${modal.data.id}/upload-certificate`, { method: 'POST', body: fd })
+      fd.append('file', file)
+      const res = await apiFetch('/api/admin/uploads/document?folder=certificates', { method: 'POST', body: fd })
       handleChange('certificate_url', res.url)
-      handleChange('certificate_type', res.certType)
-      toast('Certificate uploaded!')
+      handleChange('certificate_type', res.type)
+      toast('Certificate uploaded. Save the entry to attach it.')
     } catch (e) {
       toast(e.message, 'error')
     } finally {
       setUploadingCert(false)
+    }
+  }
+
+  const handleLogoUpload = async (file) => {
+    if (!file) return
+    setUploadingLogo(true)
+    try {
+      const fd = new FormData()
+      fd.append('file', file)
+      const res = await apiFetch('/api/admin/uploads/image?folder=logos', { method: 'POST', body: fd })
+      handleChange('company_logo', res.url)
+      toast('Company logo uploaded. Save the entry to attach it.')
+    } catch (e) {
+      toast(e.message, 'error')
+    } finally {
+      setUploadingLogo(false)
     }
   }
 
@@ -250,6 +268,17 @@ export default function Experience() {
             </div>
 
             <div>
+              <label className="mb-1.5 block text-xs font-semibold text-slate-700 dark:text-slate-300">Responsibilities (one per line)</label>
+              <textarea
+                rows={4}
+                value={modal.data.responsibilities || ''}
+                onChange={e => handleChange('responsibilities', e.target.value)}
+                placeholder={'Built responsive interfaces\nIntegrated REST APIs\nCollaborated with the design team'}
+                className="w-full resize-none rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-900 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+              />
+            </div>
+
+            <div>
               <label className="mb-1.5 block text-xs font-semibold text-slate-700 dark:text-slate-300">Skills / Tech Stack (comma separated)</label>
               <input
                 type="text"
@@ -260,7 +289,20 @@ export default function Experience() {
               />
             </div>
 
-            {modal.mode === 'edit' && (
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div>
+                <label className="mb-1.5 block text-xs font-semibold text-slate-700 dark:text-slate-300">Company Logo</label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={e => handleLogoUpload(e.target.files[0])}
+                  className="block w-full text-sm text-slate-600 file:mr-3 file:rounded-lg file:border-0 file:bg-indigo-50 file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-indigo-700 dark:text-slate-300 dark:file:bg-indigo-500/15 dark:file:text-indigo-300"
+                />
+                {uploadingLogo && <p className="mt-1 text-xs text-indigo-600">Uploading logo...</p>}
+                {modal.data.company_logo && (
+                  <img src={modal.data.company_logo} alt="Company logo" className="mt-2 h-10 w-auto rounded border border-slate-200 bg-white p-1 dark:border-slate-700" onError={e => { e.target.style.display = 'none' }} />
+                )}
+              </div>
               <div>
                 <label className="mb-1.5 block text-xs font-semibold text-slate-700 dark:text-slate-300">Certificate / Proof (PDF or Image)</label>
                 <input
@@ -281,7 +323,7 @@ export default function Experience() {
                   </a>
                 )}
               </div>
-            )}
+            </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div>

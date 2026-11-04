@@ -8,8 +8,8 @@ const __dirname = path.dirname(__filename)
 
 function getStoragePaths() {
   const isServerless = Boolean(process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME || process.env.NETLIFY)
-  let dir = path.resolve(__dirname, '../data')
-  if (isServerless) {
+  let dir = process.env.DATA_DIR ? path.resolve(process.env.DATA_DIR) : path.resolve(__dirname, '../data')
+  if (isServerless && !process.env.DATA_DIR) {
     dir = '/tmp/portfolio-data'
   }
   return {
@@ -22,7 +22,7 @@ function getStoragePaths() {
 const recentSubmissions = new Map() // key: ip or email -> timestamp
 const ipSubmissionCounts = new Map() // key: ip -> [timestamps]
 
-/** Ensure persistent storage file exists */
+/** Ensure the legacy JSON mirror directory exists */
 function ensureStorage() {
   try {
     const { dir, file } = getStoragePaths()
@@ -70,55 +70,67 @@ export function validateSubmissionSpam(clientIp, email, messageText) {
   return { allowed: true }
 }
 
-/** Save a new message to SQLite (primary) and also write to JSON fallback */
+/**
+ * Save a new message to SQLite.
+ * Throws when the durable write fails so the API never reports a false success.
+ */
 export async function saveMessage({ name, email, subject, message, clientIp = '127.0.0.1' }) {
-  ensureStorage()
-
   const id = `msg_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`
+  const createdAt = new Date().toISOString()
   const record = {
     id,
     name: name.trim(),
     email: email.trim().toLowerCase(),
     subject: subject.trim(),
     message: message.trim(),
-    createdAt: new Date().toISOString(),
-    clientIp,
-    whatsappNotificationStatus: 'pending',
-    whatsappNotificationError: null,
+    createdAt,
+    clientIp: String(clientIp).split(',')[0].trim(),
+    status: 'unread',
   }
 
-  // Primary: save to SQLite
-  try {
-    db.prepare(
-      `INSERT INTO contact_messages (id, name, email, subject, message, status, client_ip, created_at)
-       VALUES (?, ?, ?, ?, ?, 'unread', ?, datetime('now'))`
-    ).run(id, record.name, record.email, record.subject, record.message, String(clientIp).split(',')[0].trim())
-    console.log(`[Storage Service] Message ${id} saved to SQLite.`)
-  } catch (err) {
-    console.error('[Storage Service] Failed to save message to SQLite:', err)
+  // Primary (required): durable SQLite write
+  const result = db.prepare(
+    `INSERT INTO contact_messages (id, name, email, subject, message, status, client_ip, created_at)
+     VALUES (?, ?, ?, ?, ?, 'unread', ?, ?)`
+  ).run(id, record.name, record.email, record.subject, record.message, record.clientIp, createdAt)
+
+  if (!result || result.changes !== 1) {
+    throw new Error('The message could not be written to the database.')
   }
 
-  // Secondary: also write JSON for backward compat / WhatsApp notification status tracking
+  // Verify the row is readable before confirming delivery to the visitor.
+  const persisted = db.prepare('SELECT id FROM contact_messages WHERE id = ?').get(id)
+  if (!persisted) {
+    throw new Error('The message could not be verified in the database.')
+  }
+
+  // Secondary (best effort): JSON mirror kept for backward compatibility
   try {
+    ensureStorage()
     const { file: messagesFile } = getStoragePaths()
     let messages = []
     if (fs.existsSync(messagesFile)) {
       const content = fs.readFileSync(messagesFile, 'utf-8')
       messages = JSON.parse(content || '[]')
     }
-    messages.unshift(record) // newest first
+    messages.unshift(record)
     fs.writeFileSync(messagesFile, JSON.stringify(messages, null, 2), 'utf-8')
-    console.log(`[Storage Service] Message ${id} also written to ${messagesFile}`)
   } catch (err) {
-    console.warn('[Storage Service] Notice saving message to JSON fallback:', err.message)
+    console.warn('[Storage Service] Notice saving message to JSON mirror:', err.message)
   }
 
   return record
 }
 
-/** Update the WhatsApp notification status for a stored message */
+/** Persist notification delivery state for a message (SQLite + JSON mirror) */
 export function updateMessageNotificationStatus(id, status, error = null) {
-  ensureStorage()
+  try {
+    db.prepare('UPDATE contact_messages SET notification_status = ?, notification_error = ? WHERE id = ?')
+      .run(status, error ? String(error).slice(0, 500) : null, id)
+  } catch (err) {
+    console.warn(`[Storage Service] Notice updating notification status for ${id}:`, err.message)
+  }
+
   try {
     const { file: messagesFile } = getStoragePaths()
     if (!fs.existsSync(messagesFile)) return
@@ -126,12 +138,12 @@ export function updateMessageNotificationStatus(id, status, error = null) {
     const messages = JSON.parse(content || '[]')
     const idx = messages.findIndex((m) => m.id === id)
     if (idx !== -1) {
-      messages[idx].whatsappNotificationStatus = status
-      messages[idx].whatsappNotificationError = error ? String(error) : null
+      messages[idx].notificationStatus = status
+      messages[idx].notificationError = error ? String(error) : null
       messages[idx].notifiedAt = new Date().toISOString()
       fs.writeFileSync(messagesFile, JSON.stringify(messages, null, 2), 'utf-8')
     }
   } catch (err) {
-    console.warn(`[Storage Service] Notice updating status for ${id}:`, err.message)
+    console.warn(`[Storage Service] Notice updating JSON status for ${id}:`, err.message)
   }
 }

@@ -28,6 +28,7 @@ export default function Messages() {
   const [selectedMessage, setSelectedMessage] = useState(null)
   const [deleteTarget, setDeleteTarget] = useState(null)
   const [emailServiceConfigured, setEmailServiceConfigured] = useState(false)
+  const [emailServiceInfo, setEmailServiceInfo] = useState(null)
 
   // Reply modal / form state
   const [showReplyForm, setShowReplyForm] = useState(false)
@@ -45,7 +46,10 @@ export default function Messages() {
       const list = msgRes.messages || []
       setMessages(list)
       if (statsRes) setStats(statsRes)
-      if (emailStatusRes) setEmailServiceConfigured(Boolean(emailStatusRes.configured))
+      if (emailStatusRes) {
+        setEmailServiceConfigured(Boolean(emailStatusRes.configured))
+        setEmailServiceInfo(emailStatusRes)
+      }
 
       // Trigger layout badge update
       window.dispatchEvent(new Event('messages-updated'))
@@ -263,6 +267,17 @@ export default function Messages() {
           Refresh Inbox
         </button>
       </div>
+
+      {emailServiceInfo && !emailServiceConfigured && (
+        <div className="flex items-start gap-2.5 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-800 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300">
+          <AlertCircle size={16} className="mt-0.5 shrink-0" />
+          <p>
+            <strong>Email notifications are not configured.</strong> Messages still save here, but no alert email is sent.
+            Set SMTP_HOST, SMTP_USER, SMTP_PASS and ADMIN_EMAIL on the server to enable them. Until then, use
+            “Open in Email Client” to reply.
+          </p>
+        </div>
+      )}
 
       {/* Tabs and Search Bar */}
       <div className="flex flex-col gap-3 rounded-2xl border border-slate-200/80 bg-white p-3 dark:border-slate-800 dark:bg-slate-900 sm:flex-row sm:items-center sm:justify-between">

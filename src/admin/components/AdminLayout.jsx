@@ -4,21 +4,24 @@ import { useThemeAdmin } from '../hooks/useThemeAdmin'
 import { useApi } from '../hooks/useApi'
 import {
   LayoutDashboard, FolderKanban, Cpu, Briefcase, GraduationCap,
-  FileText, Award, User, Phone, Settings, LogOut, Menu, X,
-  Sun, Moon, ChevronRight, Inbox
+  FileText, Award, User, Phone, Settings, LogOut, Menu,
+  Sun, Moon, ChevronRight, Inbox, UserRound, Info, Wrench, Bot
 } from 'lucide-react'
 
 const NAV_ITEMS = [
-  { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { id: 'messages', label: 'Messages / Inbox', icon: Inbox, badgeKey: 'unreadMessages' },
-  { id: 'projects', label: 'Projects', icon: FolderKanban },
+  { id: 'dashboard', label: 'Overview', icon: LayoutDashboard },
+  { id: 'personal', label: 'Personal Information', icon: UserRound },
+  { id: 'about', label: 'About Me / Hero', icon: Info },
   { id: 'skills', label: 'Skills', icon: Cpu },
-  { id: 'experience', label: 'Experience', icon: Briefcase },
   { id: 'education', label: 'Education', icon: GraduationCap },
-  { id: 'documents', label: 'My Documents', icon: FileText },
-  { id: 'certificates', label: 'Certificates', icon: Award },
-  { id: 'about', label: 'About / Hero', icon: User },
-  { id: 'contact', label: 'Contact & Social', icon: Phone },
+  { id: 'experience', label: 'Experience', icon: Briefcase },
+  { id: 'projects', label: 'Projects', icon: FolderKanban },
+  { id: 'certificates', label: 'Certifications', icon: Award },
+  { id: 'services', label: 'Services', icon: Wrench },
+  { id: 'contact', label: 'Contact & Social Links', icon: Phone },
+  { id: 'messages', label: 'Messages / Inbox', icon: Inbox, badgeKey: 'unreadMessages' },
+  { id: 'chatbot', label: 'Chatbot Knowledge', icon: Bot },
+  { id: 'documents', label: 'Resume / CV Files', icon: FileText },
   { id: 'settings', label: 'Website Settings', icon: Settings },
 ]
 

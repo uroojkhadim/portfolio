@@ -1,29 +1,26 @@
 /**
- * DataContext — Fetches all public portfolio data from the API.
- * Falls back to static JS data if the API is unavailable.
+ * DataContext — loads every public portfolio section from the CMS API.
+ *
+ * The static files remain a read-only fallback for the public site only (so a
+ * cold start or a network hiccup never blanks the portfolio). The admin panel
+ * always reads the database directly and never falls back to static content.
  */
-import { createContext, useContext, useEffect, useState } from 'react'
+import { createContext, useContext, useEffect, useState, useCallback } from 'react'
 
-// Static fallbacks
 import { webProjects } from '../data/projects'
 import { mobileProjects as staticMobile } from '../data/mobileProjects'
 import { skillCategories as staticSkills } from '../data/skills'
-import { professionalExperiences, experienceOverview as staticExpOverview } from '../data/experience'
+import { professionalExperiences } from '../data/experience'
 import { educationData } from '../data/education'
 import { personalInfo } from '../data/personal'
 import { documents as staticDocuments } from '../data/cv'
+import { fallbackServices } from '../data/services'
 
 const DataContext = createContext(null)
 
-function mapSkillsFromApi(apiData) {
-  if (!apiData || !Array.isArray(apiData)) return null
-  // Map icon_name string back to the icon component for Skills.jsx
-  return apiData
-}
-
 const safeJsonFetch = async (url) => {
   try {
-    const res = await fetch(url)
+    const res = await fetch(url, { headers: { Accept: 'application/json' } })
     if (!res.ok) return null
     const contentType = res.headers.get('content-type') || ''
     if (!contentType.includes('application/json')) return null
@@ -34,73 +31,93 @@ const safeJsonFetch = async (url) => {
   }
 }
 
+const initialData = {
+  webProjects,
+  mobileProjects: staticMobile,
+  apiSkillCategories: null,
+  experience: professionalExperiences,
+  education: [educationData],
+  documents: Object.values(staticDocuments),
+  certificates: [],
+  services: fallbackServices,
+  about: null,
+  contact: null,
+  settings: null,
+  chatbotConfig: null,
+  loaded: false,
+  apiAvailable: false,
+}
+
 export function DataProvider({ children }) {
-  const [data, setData] = useState({
-    webProjects: webProjects,
-    mobileProjects: staticMobile,
-    skillCategories: null, // null = use static (for icon resolution)
-    experience: professionalExperiences,
-    education: [educationData],
-    documents: Object.values(staticDocuments),
-    certificates: [],
-    about: null,
-    contact: null,
-    settings: null,
-    loaded: false,
-    apiAvailable: false,
-  })
+  const [data, setData] = useState(initialData)
 
-  useEffect(() => {
-    async function fetchAll() {
-      try {
-        const [projectsRes, skillsRes, expRes, eduRes, docsRes, certsRes, aboutRes, contactRes, settingsRes] = await Promise.allSettled([
-          safeJsonFetch('/api/public/projects'),
-          safeJsonFetch('/api/public/skills'),
-          safeJsonFetch('/api/public/experience'),
-          safeJsonFetch('/api/public/education'),
-          safeJsonFetch('/api/public/documents'),
-          safeJsonFetch('/api/public/certificates'),
-          safeJsonFetch('/api/public/about'),
-          safeJsonFetch('/api/public/contact'),
-          safeJsonFetch('/api/public/settings'),
-        ])
+  const fetchAll = useCallback(async () => {
+    const [
+      projectsRes,
+      skillsRes,
+      expRes,
+      eduRes,
+      docsRes,
+      certsRes,
+      servicesRes,
+      aboutRes,
+      contactRes,
+      settingsRes,
+      chatbotRes,
+    ] = await Promise.allSettled([
+      safeJsonFetch('/api/public/projects'),
+      safeJsonFetch('/api/public/skills'),
+      safeJsonFetch('/api/public/experience'),
+      safeJsonFetch('/api/public/education'),
+      safeJsonFetch('/api/public/documents'),
+      safeJsonFetch('/api/public/certificates'),
+      safeJsonFetch('/api/public/services'),
+      safeJsonFetch('/api/public/about'),
+      safeJsonFetch('/api/public/contact'),
+      safeJsonFetch('/api/public/settings'),
+      safeJsonFetch('/api/public/chatbot-config'),
+    ])
 
-        const projects = projectsRes.status === 'fulfilled' ? projectsRes.value : null
-        const skills = skillsRes.status === 'fulfilled' ? skillsRes.value : null
-        const exp = expRes.status === 'fulfilled' ? expRes.value : null
-        const edu = eduRes.status === 'fulfilled' ? eduRes.value : null
-        const docs = docsRes.status === 'fulfilled' ? docsRes.value : null
-        const certs = certsRes.status === 'fulfilled' ? certsRes.value : null
-        const about = aboutRes.status === 'fulfilled' ? aboutRes.value : null
-        const contact = contactRes.status === 'fulfilled' ? contactRes.value : null
-        const settings = settingsRes.status === 'fulfilled' ? settingsRes.value : null
+    const value = (result) => (result.status === 'fulfilled' ? result.value : null)
 
-        const apiAvailable = !!(projects || skills || exp)
+    const projects = value(projectsRes)
+    const skills = value(skillsRes)
+    const experience = value(expRes)
+    const education = value(eduRes)
+    const documents = value(docsRes)
+    const certificates = value(certsRes)
+    const services = value(servicesRes)
+    const about = value(aboutRes)
+    const contact = value(contactRes)
+    const settings = value(settingsRes)
+    const chatbotConfig = value(chatbotRes)
 
-        setData(prev => ({
-          ...prev,
-          webProjects: projects?.web ?? prev.webProjects,
-          mobileProjects: projects?.mobile ?? prev.mobileProjects,
-          apiSkillCategories: skills || null,
-          experience: exp ?? prev.experience,
-          education: edu ?? prev.education,
-          documents: docs ?? prev.documents,
-          certificates: certs ?? prev.certificates,
-          about: about || null,
-          contact: contact || null,
-          settings: settings || null,
-          loaded: true,
-          apiAvailable,
-        }))
-      } catch (err) {
-        console.warn('[DataContext] API fetch failed, using static data:', err.message)
-        setData(prev => ({ ...prev, loaded: true, apiAvailable: false }))
-      }
-    }
-    fetchAll()
+    setData(prev => ({
+      ...prev,
+      webProjects: projects?.web?.length ? projects.web : prev.webProjects,
+      mobileProjects: projects?.mobile?.length ? projects.mobile : prev.mobileProjects,
+      apiSkillCategories: skills?.length ? skills : null,
+      experience: experience?.length ? experience : prev.experience,
+      education: education?.length ? education : prev.education,
+      documents: documents?.length ? documents : prev.documents,
+      certificates: certificates ?? prev.certificates,
+      services: services?.length ? services : prev.services,
+      about: about && Object.keys(about).length ? about : null,
+      contact: contact && Object.keys(contact).length ? contact : null,
+      settings: settings && Object.keys(settings).length ? settings : null,
+      chatbotConfig: chatbotConfig || null,
+      loaded: true,
+      apiAvailable: Boolean(projects || skills || experience || about),
+    }))
   }, [])
 
-  return <DataContext.Provider value={data}>{children}</DataContext.Provider>
+  useEffect(() => { fetchAll() }, [fetchAll])
+
+  return (
+    <DataContext.Provider value={{ ...data, reload: fetchAll }}>
+      {children}
+    </DataContext.Provider>
+  )
 }
 
 export function usePortfolioData() {

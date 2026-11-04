@@ -9,6 +9,7 @@ import {
   GraduationCap,
   Star,
   Smartphone,
+  MessageCircle,
 } from 'lucide-react'
 import { personalInfo as fallbackPersonal } from '../../data/personal'
 import { cvDownloadProps } from '../../data/cv'
@@ -22,7 +23,11 @@ export default function Hero() {
 
   const name = liveAbout?.name || fallbackPersonal.name
   const role = liveAbout?.role || liveAbout?.title || 'Software Engineering Student & Developer'
-  const headline = liveAbout?.hero_heading || 'Hi, I\'m '
+  const heroHeading = (liveAbout?.hero_heading || '').trim()
+  const headingPrefix = heroHeading.includes(name)
+    ? heroHeading.slice(0, heroHeading.indexOf(name))
+    : "Hi, I'm "
+  const customHeading = heroHeading && !heroHeading.includes(name) ? heroHeading : null
   const description = liveAbout?.hero_description || fallbackPersonal.bio || 'Passionate about building responsive web applications, cross-platform Flutter mobile solutions, and intelligent digital tools. Combining solid computer science fundamentals with hands-on full-stack project experience.'
   const availability = liveAbout?.availability_status || 'Available for Remote Roles & Internships'
   const showAvailability = liveAbout ? !!liveAbout.availability_active : true
@@ -31,14 +36,22 @@ export default function Hero() {
     ? `${liveAbout.university} · ${liveAbout.degree}`
     : 'COMSATS University Islamabad · BS Software Engineering'
 
-  const ghLink = liveContact?.github?.value || liveContact?.github?.href || fallbackPersonal.github
-  const liLink = liveContact?.linkedin?.value || liveContact?.linkedin?.href || fallbackPersonal.linkedin
-  const emLink = liveContact?.email?.value || fallbackPersonal.email
+  const withProtocol = (value, prefix) => {
+    if (!value) return prefix
+    const trimmed = String(value).trim()
+    if (/^https?:/i.test(trimmed)) return trimmed
+    return `${prefix}${trimmed.replace(/^\/+/, '')}`
+  }
+  const ghLink = withProtocol(liveContact?.github?.href || liveContact?.github?.value || fallbackPersonal.github, 'https://github.com/')
+  const liLink = withProtocol(liveContact?.linkedin?.href || liveContact?.linkedin?.value || fallbackPersonal.linkedin, 'https://www.linkedin.com/in/')
+  const emLink = (liveContact?.email?.value || fallbackPersonal.email).replace(/^mailto:/, '')
+  const waLink = liveContact?.whatsapp?.href || fallbackPersonal.whatsapp
 
   const socialLinks = [
-    { icon: Github, href: ghLink, label: 'GitHub Profile' },
-    { icon: Linkedin, href: liLink, label: 'LinkedIn Profile' },
-    { icon: Mail, href: emLink.startsWith('mailto:') ? emLink : `mailto:${emLink}`, label: 'Send Email' },
+    { icon: Github, href: ghLink, label: 'GitHub profile', external: true },
+    { icon: Linkedin, href: liLink, label: 'LinkedIn profile', external: true },
+    { icon: MessageCircle, href: waLink, label: 'Chat on WhatsApp', external: true },
+    { icon: Mail, href: `mailto:${emLink}`, label: 'Send an email', external: false },
   ]
 
   return (
@@ -87,10 +100,16 @@ export default function Hero() {
               transition={{ duration: 0.45, delay: 0.08 }}
               className="font-display text-4xl font-extrabold tracking-tight text-slate-900 dark:text-white sm:text-5xl lg:text-6xl leading-[1.12]"
             >
-              Hi, I&apos;m{' '}
-              <span className="bg-gradient-to-r from-indigo-600 via-violet-600 to-purple-600 bg-clip-text text-transparent">
-                {name}
-              </span>
+              {customHeading ? (
+                customHeading
+              ) : (
+                <>
+                  {headingPrefix || "Hi, I'm "}
+                  <span className="bg-gradient-to-r from-indigo-600 via-violet-600 to-purple-600 bg-clip-text text-transparent">
+                    {name}
+                  </span>
+                </>
+              )}
             </motion.h1>
 
             {/* Professional Role Title */}
@@ -159,12 +178,11 @@ export default function Hero() {
               <span className="text-xs font-medium text-slate-400 dark:text-slate-500 mr-1">
                 Connect:
               </span>
-              {socialLinks.map(({ icon: Icon, href, label }) => (
+              {socialLinks.map(({ icon: Icon, href, label, external }) => (
                 <a
                   key={label}
                   href={href}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                  {...(external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
                   aria-label={label}
                   className="rounded-xl border border-slate-200/80 bg-white/70 p-2 text-slate-600 shadow-sm transition-all hover:-translate-y-0.5 hover:border-indigo-300 hover:text-indigo-600 dark:border-slate-700 dark:bg-slate-800/70 dark:text-slate-300 dark:hover:border-indigo-500 dark:hover:text-indigo-400"
                   title={label}

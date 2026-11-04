@@ -1,16 +1,36 @@
 import { motion } from 'framer-motion'
-import { ArrowUp, Github, Linkedin, Mail, Heart } from 'lucide-react'
+import { ArrowUp, Github, Linkedin, Mail, MessageCircle, Heart } from 'lucide-react'
 import { personalInfo, navLinks } from '../../data/personal'
 import { useNavigation } from '../../context/NavigationContext'
+import { usePortfolioData } from '../../context/DataContext'
+import { resolveFooterText } from '../../hooks/useSiteSettings'
 
-const socialLinks = [
-  { icon: Github, href: personalInfo.github, label: 'GitHub' },
-  { icon: Linkedin, href: personalInfo.linkedin, label: 'LinkedIn' },
-  { icon: Mail, href: `mailto:${personalInfo.email}`, label: 'Email' },
-]
+function ensureProtocol(value, fallbackPrefix = 'https://') {
+  if (!value) return ''
+  const trimmed = String(value).trim()
+  if (/^(https?:|mailto:|tel:)/i.test(trimmed)) return trimmed
+  return `${fallbackPrefix}${trimmed.replace(/^\/+/, '')}`
+}
 
 export default function Footer() {
   const { navigateTo } = useNavigation()
+  const { contact, about, settings } = usePortfolioData()
+
+  const email = contact?.email?.value?.replace(/^mailto:/, '') || personalInfo.email
+  const github = ensureProtocol(contact?.github?.href || contact?.github?.value || personalInfo.github, 'https://github.com/')
+  const linkedin = ensureProtocol(contact?.linkedin?.href || contact?.linkedin?.value || personalInfo.linkedin, 'https://www.linkedin.com/in/')
+  const whatsapp = contact?.whatsapp?.href || personalInfo.whatsapp
+
+  const socialLinks = [
+    { icon: Github, href: github, label: 'GitHub profile' },
+    { icon: Linkedin, href: linkedin, label: 'LinkedIn profile' },
+    { icon: MessageCircle, href: whatsapp, label: 'Chat on WhatsApp' },
+    { icon: Mail, href: `mailto:${email}`, label: 'Send an email' },
+  ]
+
+  const name = about?.name || personalInfo.name
+  const footerText = resolveFooterText(settings?.footer_text, name)
+    || `© ${new Date().getFullYear()} ${name}. All rights reserved · Software Engineering Student & Developer`
 
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' })
@@ -23,14 +43,14 @@ export default function Footer() {
           <div className="text-center md:text-left">
             <div className="flex items-center justify-center gap-2 md:justify-start">
               <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-indigo-600 text-[10px] font-black text-white">
-                UK
+                {settings?.navbar_brand || 'UK'}
               </span>
               <p className="font-display text-sm font-bold text-slate-900 dark:text-white">
-                {personalInfo.name}
+                {name}
               </p>
             </div>
             <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-              © {new Date().getFullYear()} All rights reserved · Software Engineering Student &amp; Developer
+              {footerText}
             </p>
           </div>
 
@@ -49,18 +69,21 @@ export default function Footer() {
           </ul>
 
           <div className="flex items-center gap-2">
-            {socialLinks.map(({ icon: Icon, href, label }) => (
-              <a
-                key={label}
-                href={href}
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label={label}
-                className="rounded-lg p-2 text-slate-500 transition-colors hover:bg-slate-100 hover:text-indigo-600 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-indigo-400"
-              >
-                <Icon size={16} />
-              </a>
-            ))}
+            {socialLinks.map(({ icon: Icon, href, label }) => {
+              const external = /^https?:/i.test(href)
+              return (
+                <a
+                  key={label}
+                  href={href}
+                  {...(external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+                  aria-label={label}
+                  title={label}
+                  className="rounded-lg p-2 text-slate-500 transition-colors hover:bg-slate-100 hover:text-indigo-600 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-indigo-400"
+                >
+                  <Icon size={16} />
+                </a>
+              )
+            })}
 
             <motion.button
               whileHover={{ scale: 1.05 }}

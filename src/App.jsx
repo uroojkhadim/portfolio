@@ -9,16 +9,24 @@ import LoadingScreen from './components/ui/LoadingScreen'
 import Hero from './components/sections/Hero'
 import About from './components/sections/About'
 import Skills from './components/sections/Skills'
+import Services from './components/sections/Services'
 import Experience from './components/sections/Experience'
 import Projects from './components/sections/Projects'
 import Education from './components/sections/Education'
+import Certifications from './components/sections/Certifications'
 import Roadmap from './components/sections/Roadmap'
 import Resume from './components/sections/Resume'
 import Contact from './components/sections/Contact'
 import Chatbot from './components/chat/Chatbot'
 import { navLinks } from './data/personal'
+import { useSiteSettings } from './hooks/useSiteSettings'
 
 const SECTION_IDS = navLinks.map((link) => link.id)
+
+function SiteMeta() {
+  useSiteSettings()
+  return null
+}
 
 function PortfolioContent() {
   const { setActiveSection } = useNavigation()
@@ -54,9 +62,11 @@ function PortfolioContent() {
       <Hero />
       <About />
       <Skills />
+      <Services />
       <Experience />
       <Projects />
       <Education />
+      <Certifications />
       <Roadmap />
       <Resume />
       <Contact />
@@ -75,19 +85,20 @@ function App() {
   return (
     <ThemeProvider>
       <DataProvider>
-      <NavigationProvider>
-        <AnimatePresence>
-          {loading && <LoadingScreen />}
-        </AnimatePresence>
-        <div className="flex min-h-screen flex-col bg-surface-light text-slate-900 transition-colors duration-300 dark:bg-surface-dark dark:text-slate-100">
-          <Navbar />
-          <div className="flex-1">
-            <PortfolioContent />
+        <SiteMeta />
+        <NavigationProvider>
+          <AnimatePresence>
+            {loading && <LoadingScreen />}
+          </AnimatePresence>
+          <div className="flex min-h-screen flex-col bg-surface-light text-slate-900 transition-colors duration-300 dark:bg-surface-dark dark:text-slate-100">
+            <Navbar />
+            <div className="flex-1">
+              <PortfolioContent />
+            </div>
+            <Footer />
+            <Chatbot />
           </div>
-          <Footer />
-          <Chatbot />
-        </div>
-      </NavigationProvider>
+        </NavigationProvider>
       </DataProvider>
     </ThemeProvider>
   )

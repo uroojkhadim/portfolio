@@ -6,11 +6,15 @@ import { fileURLToPath } from 'url'
 import db from '../db.js'
 import { requireAuth } from '../middleware/auth.js'
 import { uploadImage, uploadDoc } from '../middleware/upload.js'
-import { isEmailConfigured, sendReplyEmail } from '../services/email.js'
+import { isEmailConfigured, getEmailServiceInfo, sendReplyEmail } from '../services/email.js'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
-const UPLOADS_DIR = path.join(__dirname, '..', '..', 'uploads')
+const UPLOADS_DIR = process.env.UPLOADS_DIR
+  ? path.resolve(process.env.UPLOADS_DIR)
+  : process.env.VERCEL
+    ? path.join('/tmp', 'portfolio-uploads')
+    : path.join(__dirname, '..', '..', 'uploads')
 
 const router = Router()
 router.use(requireAuth)
@@ -40,6 +44,8 @@ router.get('/stats', (req, res) => {
       total_documents: safeCount('documents'),
       published_documents: safeCount('documents', 'published=1'),
       total_certificates: safeCount('certificates'),
+      total_services: safeCount('services'),
+      total_chatbot_entries: safeCount('chatbot_knowledge'),
       unpublished_projects: safeCount('projects', 'published=0'),
       total_messages: safeCount('contact_messages'),
       unread_messages: safeCount('contact_messages', "status='unread'"),
@@ -50,19 +56,42 @@ router.get('/stats', (req, res) => {
   }
 })
 
-// ─── Projects ─────────────────────────────────────────────────────────────────
+// ─── Projects (career + freelance visibility) ──────────────────────────────────────────────
 router.get('/projects', (req, res) => {
   const rows = db.prepare('SELECT * FROM projects ORDER BY category, display_order ASC').all()
   res.json(rows.map(r => ({ ...r, technologies: safeParseJson(r.technologies) })))
 })
 
+// Segment-filtered projects for the admin CMS and the route-aware chatbot.
+// /api/admin/projects?segment=career  -> career fields only
+// /api/admin/projects?segment=freelance -> freelance fields only
+// /api/admin/projects (default) -> every project, for the full-grid editor
+router.get('/projects/segment', (req, res) => {
+  try {
+    const segment = String(req.query.segment || 'both').toLowerCase()
+    const valid = ['career', 'freelance', 'both']
+    if (!valid.includes(segment)) return res.status(400).json({ error: 'segment must be one of: ' + valid.join(', ') })
+    const rows = db.prepare('SELECT * FROM projects ORDER BY category, display_order ASC').all()
+    const filtered = rows.filter(p => {
+      if (segment === 'career') return p.show_in_career === 1
+      if (segment === 'freelance') return p.show_in_freelance === 1
+      return true
+    })
+    res.json(filtered.map(r => ({ ...r, technologies: safeParseJson(r.technologies) })))
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
 router.post('/projects', (req, res) => {
   try {
-    const { slug, title, description, category, image, alt_text, live_url, github_url, technologies, featured, display_order, published } = req.body
+    const { slug, title, description, category, image, alt_text, live_url, github_url, technologies, featured, display_order, published, show_in_career, show_in_freelance } = req.body
     if (!title || !category) return res.status(400).json({ error: 'Title and category are required.' })
     const safeSlug = (slug || title).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
-    const stmt = db.prepare(`INSERT INTO projects (slug, title, description, category, image, alt_text, live_url, github_url, technologies, featured, display_order, published, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))`)
-    const r = stmt.run(safeSlug, title, description || null, category, image || null, alt_text || null, live_url || null, github_url || null, JSON.stringify(technologies || []), featured ? 1 : 0, display_order || 0, published !== undefined ? (published ? 1 : 0) : 1)
+    const showInCareer = (show_in_career === undefined ? 1 : Number(show_in_career) || 0)
+    const showInFreelance = (show_in_freelance === undefined ? 0 : Number(show_in_freelance) || 0)
+    const stmt = db.prepare(`INSERT INTO projects (slug, title, description, category, image, alt_text, live_url, github_url, technologies, featured, display_order, published, show_in_career, show_in_freelance, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))`)
+    const r = stmt.run(safeSlug, title, description || null, category, image || null, alt_text || null, live_url || null, github_url || null, JSON.stringify(technologies || []), featured ? 1 : 0, display_order || 0, published !== undefined ? (published ? 1 : 0) : 1, showInCareer, showInFreelance)
     res.json({ id: r.lastInsertRowid, message: 'Project created.' })
   } catch (err) {
     res.status(500).json({ error: err.message })
@@ -71,9 +100,14 @@ router.post('/projects', (req, res) => {
 
 router.put('/projects/:id', (req, res) => {
   try {
-    const { title, description, category, image, alt_text, live_url, github_url, technologies, featured, display_order, published } = req.body
-    db.prepare(`UPDATE projects SET title=?, description=?, category=?, image=?, alt_text=?, live_url=?, github_url=?, technologies=?, featured=?, display_order=?, published=?, updated_at=datetime('now') WHERE id=?`)
-      .run(title, description || null, category, image || null, alt_text || null, live_url || null, github_url || null, JSON.stringify(technologies || []), featured ? 1 : 0, display_order || 0, published ? 1 : 0, req.params.id)
+    const { title, description, category, image, alt_text, live_url, github_url, technologies, featured, display_order, published, show_in_career, show_in_freelance } = req.body
+    if (!title || !category) return res.status(400).json({ error: 'Title and category are required.' })
+    const showInCareer = (show_in_career === undefined ? 1 : Number(show_in_career) || 0)
+    const showInFreelance = (show_in_freelance === undefined ? 0 : Number(show_in_freelance) || 0)
+    const result = db.prepare(`UPDATE projects SET title=?, description=?, category=?, image=?, alt_text=?, live_url=?, github_url=?, technologies=?, featured=?, display_order=?, published=?, show_in_career=?, show_in_freelance=?, updated_at=datetime('now') WHERE id=?`).run(
+      title, description || null, category, image || null, alt_text || null, live_url || null, github_url || null, JSON.stringify(technologies || []), featured ? 1 : 0, display_order || 0, published ? 1 : 0, showInCareer, showInFreelance, req.params.id
+    )
+    if (!result.changes) return res.status(404).json({ error: 'Project not found.' })
     res.json({ message: 'Project updated.' })
   } catch (err) {
     res.status(500).json({ error: err.message })
@@ -82,20 +116,28 @@ router.put('/projects/:id', (req, res) => {
 
 router.delete('/projects/:id', (req, res) => {
   try {
-    db.prepare('DELETE FROM projects WHERE id = ?').run(req.params.id)
+    const result = db.prepare('DELETE FROM projects WHERE id = ?').run(req.params.id)
+    if (!result.changes) return res.status(404).json({ error: 'Project not found.' })
     res.json({ message: 'Project deleted.' })
   } catch (err) {
     res.status(500).json({ error: err.message })
   }
 })
 
+// Server-side route-switch guard for upload-image. The admin panel carries
+// one upload route for both portfolios; the folder whitelist tells the
+// server which audience the file belongs to.
 router.post('/projects/:id/upload-image', (req, res) => {
-  req.uploadSubdir = 'projects'
+  const segment = String(req.body?.segment || req.query.segment || '').toLowerCase()
+  const allowed = new Set(['career', 'freelance', 'projects', 'profile', 'certificates', 'documents', 'logos', 'services', 'misc'])
+  if (!allowed.has(segment)) return res.status(400).json({ error: 'Invalid segment. Allowed: career, freelance, projects, profile, certificates, documents, logos, services, misc.' })
+  req.uploadSubdir = segment === 'freelance' ? 'projects' : segment
   uploadImage.single('image')(req, res, (err) => {
     if (err) return res.status(400).json({ error: err.message })
     if (!req.file) return res.status(400).json({ error: 'No file uploaded.' })
-    const url = `/uploads/projects/${req.file.filename}`
-    res.json({ url })
+    const folder = segment === 'freelance' ? 'projects' : segment
+    const url = `/uploads/${folder}/${req.file.filename}`
+    res.json({ url, segment })
   })
 })
 
@@ -164,9 +206,9 @@ router.get('/experience', (req, res) => {
 
 router.post('/experience', (req, res) => {
   try {
-    const { company, role, location, type, start_date, end_date, is_current, description, skills, featured, display_order, published } = req.body
+    const { company, role, location, type, start_date, end_date, is_current, description, responsibilities, skills, certificate_url, certificate_type, company_logo, featured, display_order, published } = req.body
     if (!company || !role) return res.status(400).json({ error: 'Company and role are required.' })
-    const r = db.prepare('INSERT INTO experience (company, role, location, type, start_date, end_date, is_current, description, skills_list, featured, display_order, published) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)').run(company, role, location || null, type || 'Professional Experience', start_date || null, end_date || null, is_current ? 1 : 0, description || null, JSON.stringify(skills || []), featured ? 1 : 0, display_order || 0, published !== undefined ? (published ? 1 : 0) : 1)
+    const r = db.prepare('INSERT INTO experience (company, role, location, type, start_date, end_date, is_current, description, responsibilities, skills_list, certificate_url, certificate_type, company_logo, featured, display_order, published) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)').run(company, role, location || null, type || 'Professional Experience', start_date || null, end_date || null, is_current ? 1 : 0, description || null, responsibilities || null, JSON.stringify(skills || []), certificate_url || null, certificate_type || 'pdf', company_logo || null, featured ? 1 : 0, display_order || 0, published !== undefined ? (published ? 1 : 0) : 1)
     res.json({ id: r.lastInsertRowid })
   } catch (err) {
     res.status(500).json({ error: err.message })
@@ -174,8 +216,8 @@ router.post('/experience', (req, res) => {
 })
 
 router.put('/experience/:id', (req, res) => {
-  const { company, role, location, type, start_date, end_date, is_current, description, skills, featured, display_order, published } = req.body
-  db.prepare('UPDATE experience SET company=?, role=?, location=?, type=?, start_date=?, end_date=?, is_current=?, description=?, skills_list=?, featured=?, display_order=?, published=? WHERE id=?').run(company, role, location || null, type, start_date || null, end_date || null, is_current ? 1 : 0, description || null, JSON.stringify(skills || []), featured ? 1 : 0, display_order || 0, published ? 1 : 0, req.params.id)
+  const { company, role, location, type, start_date, end_date, is_current, description, responsibilities, skills, certificate_url, certificate_type, company_logo, featured, display_order, published } = req.body
+  db.prepare('UPDATE experience SET company=?, role=?, location=?, type=?, start_date=?, end_date=?, is_current=?, description=?, responsibilities=?, skills_list=?, certificate_url=?, certificate_type=?, company_logo=?, featured=?, display_order=?, published=? WHERE id=?').run(company, role, location || null, type, start_date || null, end_date || null, is_current ? 1 : 0, description || null, responsibilities || null, JSON.stringify(skills || []), certificate_url || null, certificate_type || 'pdf', company_logo || null, featured ? 1 : 0, display_order || 0, published ? 1 : 0, req.params.id)
   res.json({ message: 'Experience updated.' })
 })
 
@@ -204,9 +246,9 @@ router.get('/education', (req, res) => {
 
 router.post('/education', (req, res) => {
   try {
-    const { institution, degree, field_of_study, start_date, end_date, is_current, cgpa, description, status_label, display_order, published } = req.body
+    const { institution, degree, field_of_study, campus, start_date, end_date, is_current, cgpa, description, status_label, display_order, published } = req.body
     if (!institution || !degree) return res.status(400).json({ error: 'Institution and degree are required.' })
-    const r = db.prepare('INSERT INTO education (institution, degree, field_of_study, start_date, end_date, is_current, cgpa, description, status_label, display_order, published) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)').run(institution, degree, field_of_study || null, start_date || null, end_date || null, is_current ? 1 : 0, cgpa || null, description || null, status_label || null, display_order || 0, published !== undefined ? (published ? 1 : 0) : 1)
+    const r = db.prepare('INSERT INTO education (institution, degree, field_of_study, campus, start_date, end_date, is_current, cgpa, description, status_label, display_order, published) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)').run(institution, degree, field_of_study || null, campus || null, start_date || null, end_date || null, is_current ? 1 : 0, cgpa || null, description || null, status_label || null, display_order || 0, published !== undefined ? (published ? 1 : 0) : 1)
     res.json({ id: r.lastInsertRowid })
   } catch (err) {
     res.status(500).json({ error: err.message })
@@ -214,8 +256,8 @@ router.post('/education', (req, res) => {
 })
 
 router.put('/education/:id', (req, res) => {
-  const { institution, degree, field_of_study, start_date, end_date, is_current, cgpa, description, status_label, display_order, published } = req.body
-  db.prepare('UPDATE education SET institution=?, degree=?, field_of_study=?, start_date=?, end_date=?, is_current=?, cgpa=?, description=?, status_label=?, display_order=?, published=? WHERE id=?').run(institution, degree, field_of_study || null, start_date || null, end_date || null, is_current ? 1 : 0, cgpa || null, description || null, status_label || null, display_order || 0, published ? 1 : 0, req.params.id)
+  const { institution, degree, field_of_study, campus, start_date, end_date, is_current, cgpa, description, status_label, display_order, published } = req.body
+  db.prepare('UPDATE education SET institution=?, degree=?, field_of_study=?, campus=?, start_date=?, end_date=?, is_current=?, cgpa=?, description=?, status_label=?, display_order=?, published=? WHERE id=?').run(institution, degree, field_of_study || null, campus || null, start_date || null, end_date || null, is_current ? 1 : 0, cgpa || null, description || null, status_label || null, display_order || 0, published ? 1 : 0, req.params.id)
   res.json({ message: 'Education updated.' })
 })
 
@@ -330,20 +372,33 @@ router.put('/about', (req, res) => {
   uploadImage.single('profile_image')(req, res, (err) => {
     if (err) return res.status(400).json({ error: err.message })
     try {
-      const existing = db.prepare('SELECT * FROM about_content LIMIT 1').get()
-      const body = req.body
-      const profileImage = req.file ? `/uploads/profile/${req.file.filename}` : (body.profile_image || existing?.profile_image || '/profile.png')
-      if (existing) {
-        db.prepare(`UPDATE about_content SET name=?, title=?, role=?, bio=?, hero_heading=?, hero_description=?, availability_status=?, availability_active=?, profile_image=?, university=?, degree=?, location=?, updated_at=datetime('now') WHERE id=?`).run(
-          body.name || existing.name, body.title || existing.title, body.role || existing.role, body.bio || existing.bio,
-          body.hero_heading || existing.hero_heading, body.hero_description || existing.hero_description,
-          body.availability_status || existing.availability_status, body.availability_active !== undefined ? (body.availability_active ? 1 : 0) : existing.availability_active,
-          profileImage, body.university || existing.university, body.degree || existing.degree, body.location || existing.location, existing.id
+      const existing = db.prepare('SELECT * FROM about_content LIMIT 1').get() || {}
+      const body = req.body || {}
+      const valueFor = (key) => (body[key] !== undefined ? body[key] : (existing[key] ?? ''))
+      const profileImage = req.file
+        ? `/uploads/profile/${req.file.filename}`
+        : (body.profile_image !== undefined ? body.profile_image : (existing.profile_image || '/profile.png'))
+      const availabilityActive = ['1', 'true', 'on', 'yes', true, 1].includes(body.availability_active) ? 1 : 0
+
+      if (existing.id) {
+        db.prepare(`UPDATE about_content SET name=?, title=?, role=?, bio=?, hero_heading=?, hero_description=?, about_heading=?, about_description=?, availability_status=?, availability_active=?, profile_image=?, university=?, degree=?, location=?, updated_at=datetime('now') WHERE id=?`).run(
+          valueFor('name'), valueFor('title'), valueFor('role'), valueFor('bio'),
+          valueFor('hero_heading'), valueFor('hero_description'), valueFor('about_heading'), valueFor('about_description'),
+          valueFor('availability_status'), availabilityActive,
+          profileImage, valueFor('university'), valueFor('degree'), valueFor('location'), existing.id
         )
       } else {
-        db.prepare('INSERT INTO about_content (name, title, role, bio, hero_heading, hero_description, availability_status, availability_active, profile_image, university, degree, location) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)').run(body.name, body.title, body.role, body.bio, body.hero_heading, body.hero_description, body.availability_status, body.availability_active ? 1 : 0, profileImage, body.university, body.degree, body.location)
+        db.prepare(`INSERT INTO about_content
+          (name, title, role, bio, hero_heading, hero_description, about_heading, about_description, availability_status, availability_active, profile_image, university, degree, location)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`).run(
+          valueFor('name'), valueFor('title'), valueFor('role'), valueFor('bio'),
+          valueFor('hero_heading'), valueFor('hero_description'), valueFor('about_heading'), valueFor('about_description'),
+          valueFor('availability_status'), availabilityActive,
+          profileImage, valueFor('university'), valueFor('degree'), valueFor('location')
+        )
       }
-      res.json({ message: 'About content updated.', profile_image: profileImage })
+      const updated = db.prepare('SELECT * FROM about_content LIMIT 1').get()
+      res.json({ message: 'About content updated.', profile_image: profileImage, about: updated })
     } catch (e) {
       res.status(500).json({ error: e.message })
     }
@@ -359,11 +414,53 @@ router.put('/contact', (req, res) => {
   try {
     const items = req.body
     if (!Array.isArray(items)) return res.status(400).json({ error: 'Expected array of contact items.' })
-    const stmt = db.prepare('UPDATE contact_info SET label=?, value=?, href=?, visible=? WHERE key=?')
-    items.forEach(item => {
-      stmt.run(item.label, item.value, item.href || null, item.visible ? 1 : 0, item.key)
+    const stmt = db.prepare('UPDATE contact_info SET label=?, value=?, href=?, visible=?, display_order=? WHERE key=?')
+    const update = db.transaction((rows) => {
+      rows.forEach((item, index) => {
+        if (!item || typeof item.key !== 'string' || !item.key.trim()) {
+          throw new Error('Every contact item needs a key.')
+        }
+        stmt.run(
+          String(item.label || item.key).trim(),
+          String(item.value || '').trim(),
+          item.href ? String(item.href).trim() : null,
+          item.visible ? 1 : 0,
+          item.display_order !== undefined ? Number(item.display_order) || 0 : index,
+          item.key.trim()
+        )
+      })
     })
+    update(items)
     res.json({ message: 'Contact info updated.' })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
+// POST /api/admin/contact — add a new contact method or social link
+router.post('/contact', (req, res) => {
+  try {
+    const { key, label, value, href, visible, display_order } = req.body || {}
+    const cleanKey = String(key || label || '').toLowerCase().trim().replace(/[^a-z0-9_-]+/g, '-').replace(/(^-|-$)/g, '')
+    if (!cleanKey) return res.status(400).json({ error: 'A key or label is required.' })
+    if (!value || !String(value).trim()) return res.status(400).json({ error: 'A contact value is required.' })
+    const exists = db.prepare('SELECT id FROM contact_info WHERE key = ?').get(cleanKey)
+    if (exists) return res.status(409).json({ error: `A contact item with the key "${cleanKey}" already exists.` })
+    const maxOrder = db.prepare('SELECT COALESCE(MAX(display_order), -1) as m FROM contact_info').get().m
+    db.prepare('INSERT INTO contact_info (key, label, value, href, visible, display_order) VALUES (?, ?, ?, ?, ?, ?)')
+      .run(cleanKey, String(label || cleanKey).trim(), String(value).trim(), href ? String(href).trim() : null, visible === false || visible === 0 ? 0 : 1, display_order !== undefined ? Number(display_order) || 0 : maxOrder + 1)
+    res.json({ message: 'Contact item added.', key: cleanKey })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
+// DELETE /api/admin/contact/:key
+router.delete('/contact/:key', (req, res) => {
+  try {
+    const result = db.prepare('DELETE FROM contact_info WHERE key = ?').run(req.params.key)
+    if (!result.changes) return res.status(404).json({ error: 'Contact item not found.' })
+    res.json({ message: 'Contact item deleted.' })
   } catch (err) {
     res.status(500).json({ error: err.message })
   }
@@ -461,9 +558,9 @@ router.patch('/messages/:id/status', (req, res) => {
   }
 })
 
-// GET /api/admin/messages/email-status — check if email service is configured
+// GET /api/admin/messages-email-status — check if email service is configured
 router.get('/messages-email-status', (req, res) => {
-  res.json({ configured: isEmailConfigured() })
+  res.json(getEmailServiceInfo())
 })
 
 // POST /api/admin/messages/:id/reply — send reply via configured SMTP
@@ -510,6 +607,499 @@ router.delete('/messages/:id', (req, res) => {
   } catch (err) {
     res.status(500).json({ error: err.message })
   }
+})
+
+// ─── Freelance services categories ──────────────────────────────────────────────
+router.get('/services-categories', (req, res) => {
+  const rows = db.prepare('SELECT * FROM services_categories ORDER BY display_order ASC, id ASC').all()
+  res.json(rows.map(r => ({ ...r, technologies: safeParseJson(r.technologies) })))
+})
+
+router.post('/services-categories', (req, res) => {
+  try {
+    const { title, description, technologies, icon_name, display_order, published } = req.body || {}
+    if (!title || !String(title).trim()) return res.status(400).json({ error: 'Category title is required.' })
+    const tech = Array.isArray(technologies)
+      ? technologies
+      : String(technologies || '').split(',').map(t => t.trim()).filter(Boolean)
+    const result = db.prepare(`INSERT INTO services_categories (title, description, icon_name, technologies, display_order, published, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, datetime('now'))`).run(String(title).trim(), description || null, icon_name || 'LayerGroup', JSON.stringify(tech), display_order || 0, published !== undefined ? (published ? 1 : 0) : 1)
+    if (!result.changes) return res.status(404).json({ error: 'Category not found.' })
+    res.json({ id: result.lastInsertRowid, message: 'Services category created.' })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
+router.put('/services-categories/:id', (req, res) => {
+  try {
+    const { title, description, technologies, icon_name, display_order, published } = req.body || {}
+    if (!title || !String(title).trim()) return res.status(400).json({ error: 'Category title is required.' })
+    const tech = Array.isArray(technologies)
+      ? technologies
+      : String(technologies || '').split(',').map(t => t.trim()).filter(Boolean)
+    const result = db.prepare(`UPDATE services_categories SET title=?, description=?, icon_name=?, technologies=?, display_order=?, published=?, updated_at=datetime('now') WHERE id=?`).run(String(title).trim(), description || null, icon_name || 'LayerGroup', JSON.stringify(tech), display_order || 0, published ? 1 : 0, req.params.id)
+    if (!result.changes) return res.status(404).json({ error: 'Category not found.' })
+    res.json({ message: 'Services category updated.' })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
+router.delete('/services-categories/:id', (req, res) => {
+  try {
+    const result = db.prepare('DELETE FROM services_categories WHERE id = ?').run(req.params.id)
+    if (!result.changes) return res.status(404).json({ error: 'Category not found.' })
+    res.json({ message: 'Services category deleted.' })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
+// ─── Services ─────────────────────────────────────────────────────────────────
+router.get('/services', (req, res) => {
+  const rows = db.prepare('SELECT * FROM services ORDER BY display_order ASC, id ASC').all()
+  res.json(rows.map(row => ({ ...row, technologies: safeParseJson(row.technologies) })))
+})
+
+router.post('/services', (req, res) => {
+  try {
+    const { title, description, icon_name, technologies, availability, display_order, published } = req.body || {}
+    if (!title || !String(title).trim()) return res.status(400).json({ error: 'Service title is required.' })
+    const tech = Array.isArray(technologies)
+      ? technologies
+      : String(technologies || '').split(',').map(t => t.trim()).filter(Boolean)
+    const r = db.prepare(`INSERT INTO services (title, description, icon_name, technologies, availability, display_order, published, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, datetime('now'))`).run(
+      String(title).trim(), description || null, icon_name || 'Code2', JSON.stringify(tech),
+      availability || 'Available', display_order || 0, published !== undefined ? (published ? 1 : 0) : 1
+    )
+    res.json({ id: r.lastInsertRowid, message: 'Service created.' })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
+router.put('/services/:id', (req, res) => {
+  try {
+    const { title, description, icon_name, technologies, availability, display_order, published } = req.body || {}
+    if (!title || !String(title).trim()) return res.status(400).json({ error: 'Service title is required.' })
+    const tech = Array.isArray(technologies)
+      ? technologies
+      : String(technologies || '').split(',').map(t => t.trim()).filter(Boolean)
+    const result = db.prepare(`UPDATE services SET title=?, description=?, icon_name=?, technologies=?, availability=?, display_order=?, published=?, updated_at=datetime('now') WHERE id=?`).run(
+      String(title).trim(), description || null, icon_name || 'Code2', JSON.stringify(tech),
+      availability || 'Available', display_order || 0, published ? 1 : 0, req.params.id
+    )
+    if (!result.changes) return res.status(404).json({ error: 'Service not found.' })
+    res.json({ message: 'Service updated.' })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
+router.delete('/services/:id', (req, res) => {
+  try {
+    const result = db.prepare('DELETE FROM services WHERE id = ?').run(req.params.id)
+    if (!result.changes) return res.status(404).json({ error: 'Service not found.' })
+    res.json({ message: 'Service deleted.' })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
+// ─── Freelance service categories ───────────────────────────────────────────────────────
+router.get('/services-categories', (req, res) => {
+  const rows = db.prepare('SELECT * FROM services_categories ORDER BY display_order ASC, id ASC').all()
+  res.json(rows.map(r => ({ ...r, technologies: safeParseJson(r.technologies) })))
+})
+
+router.post('/services-categories', (req, res) => {
+  try {
+    const { title, description, technologies, icon_name, display_order, published } = req.body || {}
+    if (!title || !String(title).trim()) return res.status(400).json({ error: 'Category title is required.' })
+    const tech = Array.isArray(technologies)
+      ? technologies
+      : String(technologies || '').split(',').map(t => t.trim()).filter(Boolean)
+    const result = db.prepare(`INSERT INTO services_categories (title, description, icon_name, technologies, display_order, published, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, datetime('now'))`).run(String(title).trim(), description || null, icon_name || 'LayerGroup', JSON.stringify(tech), display_order || 0, published !== undefined ? (published ? 1 : 0) : 1)
+    if (!result.changes) return res.status(404).json({ error: 'Category not found.' })
+    res.json({ id: result.lastInsertRowid, message: 'Services category created.' })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
+router.put('/services-categories/:id', (req, res) => {
+  try {
+    const { title, description, technologies, icon_name, display_order, published } = req.body || {}
+    if (!title || !String(title).trim()) return res.status(400).json({ error: 'Category title is required.' })
+    const tech = Array.isArray(technologies)
+      ? technologies
+      : String(technologies || '').split(',').map(t => t.trim()).filter(Boolean)
+    const result = db.prepare(`UPDATE services_categories SET title=?, description=?, icon_name=?, technologies=?, display_order=?, published=?, updated_at=datetime('now') WHERE id=?`).run(String(title).trim(), description || null, icon_name || 'LayerGroup', JSON.stringify(tech), display_order || 0, published ? 1 : 0, req.params.id)
+    if (!result.changes) return res.status(404).json({ error: 'Category not found.' })
+    res.json({ message: 'Services category updated.' })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
+router.delete('/services-categories/:id', (req, res) => {
+  try {
+    const result = db.prepare('DELETE FROM services_categories WHERE id = ?').run(req.params.id)
+    if (!result.changes) return res.status(404).json({ error: 'Category not found.' })
+    res.json({ message: 'Services category deleted.' })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
+// ─── Projects ─────────────────────────────────────────────────────────────────
+router.get('/projects', (req, res) => {
+  const rows = db.prepare('SELECT * FROM projects ORDER BY category, display_order ASC').all()
+  res.json(rows.map(r => ({ ...r, technologies: safeParseJson(r.technologies) })))
+})
+
+router.get('/projects/segment', (req, res) => {
+  try {
+    const segment = String(req.query.segment || 'both').toLowerCase()
+    const valid = ['career', 'freelance', 'both']
+    if (!valid.includes(segment)) return res.status(400).json({ error: 'segment must be one of: ' + valid.join(', ') })
+    const rows = db.prepare('SELECT * FROM projects ORDER BY category, display_order ASC').all()
+    const filtered = rows.filter(p => {
+      if (segment === 'career') return p.show_in_career === 1
+      if (segment === 'freelance') return p.show_in_freelance === 1
+      return true
+    })
+    res.json(filtered.map(r => ({ ...r, technologies: safeParseJson(r.technologies) })))
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
+router.post('/projects', (req, res) => {
+  try {
+    const { slug, title, description, category, image, alt_text, live_url, github_url, technologies, featured, display_order, published, show_in_career, show_in_freelance } = req.body
+    if (!title || !category) return res.status(400).json({ error: 'Title and category are required.' })
+    const safeSlug = (slug || title).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
+    const showInCareer = (show_in_career === undefined ? 1 : Number(show_in_career) || 0)
+    const showInFreelance = (show_in_freelance === undefined ? 0 : Number(show_in_freelance) || 0)
+    const stmt = db.prepare(`INSERT INTO projects (slug, title, description, category, image, alt_text, live_url, github_url, technologies, featured, display_order, published, show_in_career, show_in_freelance, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))`)
+    const r = stmt.run(safeSlug, title, description || null, category, image || null, alt_text || null, live_url || null, github_url || null, JSON.stringify(technologies || []), featured ? 1 : 0, display_order || 0, published !== undefined ? (published ? 1 : 0) : 1, showInCareer, showInFreelance)
+    res.json({ id: r.lastInsertRowid, message: 'Project created.' })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
+router.put('/projects/:id', (req, res) => {
+  try {
+    const { title, description, category, image, alt_text, live_url, github_url, technologies, featured, display_order, published, show_in_career, show_in_freelance } = req.body
+    if (!title || !category) return res.status(400).json({ error: 'Title and category are required.' })
+    const showInCareer = (show_in_career === undefined ? 1 : Number(show_in_career) || 0)
+    const showInFreelance = (show_in_freelance === undefined ? 0 : Number(show_in_freelance) || 0)
+    const result = db.prepare(`UPDATE projects SET title=?, description=?, category=?, image=?, alt_text=?, live_url=?, github_url=?, technologies=?, featured=?, display_order=?, published=?, show_in_career=?, show_in_freelance=?, updated_at=datetime('now') WHERE id=?`).run(
+      title, description || null, category, image || null, alt_text || null, live_url || null, github_url || null, JSON.stringify(technologies || []), featured ? 1 : 0, display_order || 0, published ? 1 : 0, showInCareer, showInFreelance, req.params.id
+    )
+    if (!result.changes) return res.status(404).json({ error: 'Project not found.' })
+    res.json({ message: 'Project updated.' })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
+router.delete('/projects/:id', (req, res) => {
+  try {
+    const result = db.prepare('DELETE FROM projects WHERE id = ?').run(req.params.id)
+    if (!result.changes) return res.status(404).json({ error: 'Project not found.' })
+    res.json({ message: 'Project deleted.' })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
+router.post('/projects/:id/upload-image', (req, res) => {
+  const segment = String(req.body?.segment || req.query.segment || '').toLowerCase()
+  const allowed = new Set(['career', 'freelance', 'projects', 'profile', 'certificates', 'documents', 'logos', 'services', 'misc'])
+  if (!allowed.has(segment)) return res.status(400).json({ error: 'Invalid segment. Allowed: career, freelance, projects, profile, certificates, documents, logos, services, misc.' })
+  req.uploadSubdir = segment === 'freelance' ? 'projects' : segment
+  uploadImage.single('image')(req, res, (err) => {
+    if (err) return res.status(400).json({ error: err.message })
+    if (!req.file) return res.status(400).json({ error: 'No file uploaded.' })
+    const folder = segment === 'freelance' ? 'projects' : segment
+    const url = `/uploads/${folder}/${req.file.filename}`
+    res.json({ url, segment })
+  })
+})
+
+// ─── Testimonials ─────────────────────────────────────────────────────────────────
+router.get('/testimonials', (req, res) => {
+  const rows = db.prepare('SELECT * FROM testimonials ORDER BY display_order ASC, id ASC').all()
+  res.json(rows.map(r => ({ ...r })))
+})
+
+router.post('/testimonials', (req, res) => {
+  try {
+    const { client_name, client_role, client_company, quote, relation, sentiment, display_order, published } = req.body || {}
+    if (!client_name || !quote) return res.status(400).json({ error: 'Client name and quote are required.' })
+    const r = db.prepare(`INSERT INTO testimonials (client_name, client_role, client_company, quote, relation, sentiment, display_order, published, created_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))`).run(
+      String(client_name).trim(), client_role || null, client_company || null, String(quote).trim(),
+      relation || 'Client', sentiment || 'Trusted', display_order || 0, published !== undefined ? (published ? 1 : 0) : 1
+    )
+    res.json({ id: r.lastInsertRowid, message: 'Testimonial added.' })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
+router.put('/testimonials/:id', (req, res) => {
+  try {
+    const { client_name, client_role, client_company, quote, relation, sentiment, display_order, published } = req.body || {}
+    if (!client_name || !quote) return res.status(400).json({ error: 'Client name and quote are required.' })
+    const result = db.prepare(`UPDATE testimonials SET client_name=?, client_role=?, client_company=?, quote=?, relation=?, sentiment=?, display_order=?, published=? WHERE id=?`).run(
+      String(client_name).trim(), client_role || null, client_company || null, String(quote).trim(),
+      relation || 'Client', sentiment || 'Trusted', display_order || 0, published ? 1 : 0, req.params.id
+    )
+    if (!result.changes) return res.status(404).json({ error: 'Testimonial not found.' })
+    res.json({ message: 'Testimonial updated.' })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
+router.delete('/testimonials/:id', (req, res) => {
+  try {
+    const result = db.prepare('DELETE FROM testimonials WHERE id = ?').run(req.params.id)
+    if (!result.changes) return res.status(404).json({ error: 'Testimonial not found.' })
+    res.json({ message: 'Testimonial deleted.' })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
+// ─── Packages ─────────────────────────────────────────────────────────────────
+router.get('/packages', (req, res) => {
+  const rows = db.prepare('SELECT * FROM packages ORDER BY display_order ASC, id ASC').all()
+  res.json(rows.map(r => ({ ...r })))
+})
+
+router.post('/packages', (req, res) => {
+  try {
+    const { service_id, service_title, title, description, price, price_period, features, call_to_action, display_order, published } = req.body || {}
+    if (!title) return res.status(400).json({ error: 'Package title is required.' })
+    const r = db.prepare(`INSERT INTO packages (service_id, service_title, title, description, price, price_period, features, call_to_action, display_order, published, created_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))`).run(
+      service_id || null, service_title || null, String(title).trim(), description || null,
+      price ? Number(price) : null, price_period || null, features || null, call_to_action || 'Get a Custom Quote',
+      display_order || 0, published !== undefined ? (published ? 1 : 0) : 1
+    )
+    res.json({ id: r.lastInsertRowid, message: 'Package created.' })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
+router.put('/packages/:id', (req, res) => {
+  try {
+    const { service_id, service_title, title, description, price, price_period, features, call_to_action, display_order, published } = req.body || {}
+    if (!title) return res.status(400).json({ error: 'Package title is required.' })
+    const result = db.prepare(`UPDATE packages SET service_id=?, service_title=?, title=?, description=?, price=?, price_period=?, features=?, call_to_action=?, display_order=?, published=? WHERE id=?`).run(
+      service_id || null, service_title || null, String(title).trim(), description || null,
+      price ? Number(price) : null, price_period || null, features || null, call_to_action || 'Get a Custom Quote',
+      display_order || 0, published ? 1 : 0, req.params.id
+    )
+    if (!result.changes) return res.status(404).json({ error: 'Package not found.' })
+    res.json({ message: 'Package updated.' })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
+router.delete('/packages/:id', (req, res) => {
+  try {
+    const result = db.prepare('DELETE FROM packages WHERE id = ?').run(req.params.id)
+    if (!result.changes) return res.status(404).json({ error: 'Package not found.' })
+    res.json({ message: 'Package deleted.' })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
+// ─── Chatbot route settings ─────────────────────────────────────────────────────
+router.get('/chatbot-routes', (req, res) => {
+  const rows = db.prepare('SELECT * FROM chatbot_routes ORDER BY id ASC').all()
+  res.json(rows.map(r => ({ ...r })))
+})
+
+router.post('/chatbot-routes', (req, res) => {
+  try {
+    const { route, enabled, greeting, suggested_questions } = req.body || {}
+    if (!route || !String(route).trim()) return res.status(400).json({ error: 'Route is required.' })
+    const r = db.prepare(`INSERT INTO chatbot_routes (route, enabled, greeting, suggested_questions)
+      VALUES (?, ?, ?, ?)`).run(String(route).trim(), enabled ? 1 : 0, greeting || null, suggested_questions || null)
+    res.json({ id: r.lastInsertRowid, message: 'Chatbot route created/overridden.' })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
+router.put('/chatbot-routes/:id', (req, res) => {
+  try {
+    const { route, enabled, greeting, suggested_questions } = req.body || {}
+    if (!route || !String(route).trim()) return res.status(400).json({ error: 'Route is required.' })
+    const result = db.prepare(`UPDATE chatbot_routes SET route=?, enabled=?, greeting=?, suggested_questions=? WHERE id=?`).run(
+      String(route).trim(), enabled ? 1 : 0, greeting || null, suggested_questions || null, req.params.id
+    )
+    if (!result.changes) return res.status(404).json({ error: 'Route not found.' })
+    res.json({ message: 'Chatbot route updated.' })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
+router.delete('/chatbot-routes/:id', (req, res) => {
+  try {
+    const result = db.prepare('DELETE FROM chatbot_routes WHERE id = ?').run(req.params.id)
+    if (!result.changes) return res.status(404).json({ error: 'Route not found.' })
+    res.json({ message: 'Chatbot route deleted.' })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
+// ─── Freelance site settings (hero headline, description, CTA, process) ───────
+router.get('/freelance-settings', (req, res) => {
+  const rows = db.prepare('SELECT key, value FROM freelancer_settings ORDER BY id ASC').all()
+  const obj = {}
+  rows.forEach(r => { obj[r.key] = r.value })
+  res.json(obj)
+})
+
+router.put('/freelance-settings', (req, res) => {
+  try {
+    const body = req.body || {}
+    const upsert = db.prepare(`INSERT INTO freelancer_settings (key, value, updated_at) VALUES (?, ?, datetime('now'))
+      ON CONFLICT(key) DO UPDATE SET value=excluded.value, updated_at=excluded.updated_at`)
+    Object.entries(body).forEach(([key, value]) => {
+      if (typeof value === 'string' || value === null || value === undefined) upsert.run(key, String(value ?? ''))
+    })
+    res.json({ message: 'Freelance settings saved.' })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
+// ─── Chatbot route-filter setting ─────────────────────────────────────────────
+router.get('/chatbot-settings', (req, res) => {
+  const row = db.prepare('SELECT key, value FROM site_settings WHERE key IN (\'chatbot_route_filter\')').get()
+  res.json({ chatbot_route_filter: row?.value || 'shared' })
+})
+
+router.put('/chatbot-settings', (req, res) => {
+  try {
+    const { chatbot_route_filter } = req.body || {}
+    const valid = ['career', 'freelance', 'shared']
+    if (!valid.includes(String(chatbot_route_filter || '').toLowerCase())) return res.status(400).json({ error: 'chatbot_route_filter must be one of: ' + valid.join(', ') })
+    db.prepare(`INSERT INTO site_settings (key, value, updated_at) VALUES ('chatbot_route_filter', ?, datetime('now'))
+      ON CONFLICT(key) DO UPDATE SET value=excluded.value, updated_at=excluded.updated_at`).run(String(chatbot_route_filter),)
+    res.json({ message: 'Chatbot route filter saved.' })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
+// ─── Chatbot knowledge ───────────────────────────────────────────────────────
+router.get('/chatbot-knowledge', (req, res) => {
+  const rows = db.prepare('SELECT * FROM chatbot_knowledge ORDER BY display_order ASC, id ASC').all()
+  res.json(rows.map(row => ({ ...row, keywords: safeParseJson(row.keywords) })))
+})
+
+router.post('/chatbot-knowledge', (req, res) => {
+  try {
+    const { topic, question, answer, keywords, display_order, published } = req.body || {}
+    if (!topic || !String(topic).trim()) return res.status(400).json({ error: 'Topic is required.' })
+    if (!answer || !String(answer).trim()) return res.status(400).json({ error: 'Answer is required.' })
+    const kw = Array.isArray(keywords)
+      ? keywords
+      : String(keywords || '').split(',').map(k => k.trim()).filter(Boolean)
+    const r = db.prepare(`INSERT INTO chatbot_knowledge (topic, question, answer, keywords, display_order, published, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, datetime('now'))`).run(
+      String(topic).trim(), question || null, String(answer).trim(), JSON.stringify(kw),
+      display_order || 0, published !== undefined ? (published ? 1 : 0) : 1
+    )
+    res.json({ id: r.lastInsertRowid, message: 'Chatbot knowledge entry created.' })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
+router.put('/chatbot-knowledge/:id', (req, res) => {
+  try {
+    const { topic, question, answer, keywords, display_order, published } = req.body || {}
+    if (!topic || !String(topic).trim()) return res.status(400).json({ error: 'Topic is required.' })
+    if (!answer || !String(answer).trim()) return res.status(400).json({ error: 'Answer is required.' })
+    const kw = Array.isArray(keywords)
+      ? keywords
+      : String(keywords || '').split(',').map(k => k.trim()).filter(Boolean)
+    const result = db.prepare(`UPDATE chatbot_knowledge SET topic=?, question=?, answer=?, keywords=?, display_order=?, published=?, updated_at=datetime('now') WHERE id=?`).run(
+      String(topic).trim(), question || null, String(answer).trim(), JSON.stringify(kw),
+      display_order || 0, published ? 1 : 0, req.params.id
+    )
+    if (!result.changes) return res.status(404).json({ error: 'Chatbot entry not found.' })
+    res.json({ message: 'Chatbot knowledge entry updated.' })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
+router.delete('/chatbot-knowledge/:id', (req, res) => {
+  try {
+    const result = db.prepare('DELETE FROM chatbot_knowledge WHERE id = ?').run(req.params.id)
+    if (!result.changes) return res.status(404).json({ error: 'Chatbot entry not found.' })
+    res.json({ message: 'Chatbot knowledge entry deleted.' })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
+// ─── Generic uploads ────────────────────────────────────────────────────────
+const UPLOAD_FOLDERS = new Set(['projects', 'profile', 'certificates', 'documents', 'logos', 'services', 'misc'])
+
+router.post('/uploads/image', (req, res) => {
+  const folder = String(req.query.folder || 'misc')
+  if (!UPLOAD_FOLDERS.has(folder)) return res.status(400).json({ error: 'Invalid upload folder. Allowed: ' + [...UPLOAD_FOLDERS].join(', ') })
+  req.uploadSubdir = folder
+  uploadImage.single('file')(req, res, (err) => {
+    if (err) return res.status(400).json({ error: err.message })
+    if (!req.file) return res.status(400).json({ error: 'No file uploaded.' })
+    res.json({ url: `/uploads/${folder}/${req.file.filename}`, filename: req.file.originalname })
+  })
+})
+
+router.post('/uploads/document', (req, res) => {
+  const folder = String(req.query.folder || 'documents')
+  if (!UPLOAD_FOLDERS.has(folder)) return res.status(400).json({ error: 'Invalid upload folder. Allowed: ' + [...UPLOAD_FOLDERS].join(', ') })
+  req.uploadSubdir = folder
+  uploadDoc.single('file')(req, res, (err) => {
+    if (err) return res.status(400).json({ error: err.message })
+    if (!req.file) return res.status(400).json({ error: 'No file uploaded.' })
+    const ext = path.extname(req.file.filename).toLowerCase()
+    res.json({
+      url: `/uploads/${folder}/${req.file.filename}`,
+      filename: req.file.originalname,
+      type: ext === '.pdf' ? 'pdf' : 'image',
+    })
+  })
+})
+
+// ─── Diagnostics ─────────────────────────────────────────────────────────────
+router.get('/system-status', (req, res) => {
+  res.json({
+    email: getEmailServiceInfo(),
+    authenticated: true,
+  })
 })
 
 export default router

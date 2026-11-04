@@ -31,14 +31,16 @@ export default function About() {
   const university = liveAbout?.university || personalInfo.university
   const location = liveAbout?.location || personalInfo.location
   const bio = liveAbout?.bio || null
+  const heading = liveAbout?.about_heading || 'Engineering thoughtful digital experiences'
+  const description = liveAbout?.about_description || 'A dedicated Software Engineering student combining computer science foundations with hands-on web, mobile, and intelligent systems development.'
 
   return (
     <section id="about" className="section-padding relative">
       <div className="section-container relative">
         <SectionHeading
           eyebrow="About Me"
-          title="Engineering thoughtful digital experiences"
-          description="A dedicated Software Engineering student combining computer science foundations with hands-on web, mobile, and intelligent systems development."
+          title={heading}
+          description={description}
         />
 
         {/* Bio & Academic Identity Card */}
@@ -110,7 +112,7 @@ export default function About() {
                     <GraduationCap size={16} className="mt-0.5 shrink-0 text-indigo-500" />
                     <div>
                       <p className="font-semibold text-slate-900 dark:text-white">Degree</p>
-                      <p>{personalInfo.degree}</p>
+                      <p>{degree}</p>
                     </div>
                   </div>
 
@@ -118,7 +120,7 @@ export default function About() {
                     <Building2 size={16} className="mt-0.5 shrink-0 text-indigo-500" />
                     <div>
                       <p className="font-semibold text-slate-900 dark:text-white">University</p>
-                      <p>{personalInfo.university}</p>
+                      <p>{university}</p>
                     </div>
                   </div>
 
@@ -126,7 +128,7 @@ export default function About() {
                     <MapPin size={16} className="mt-0.5 shrink-0 text-indigo-500" />
                     <div>
                       <p className="font-semibold text-slate-900 dark:text-white">Location &amp; Availability</p>
-                      <p>{personalInfo.location}</p>
+                      <p>{location}</p>
                     </div>
                   </div>
                 </div>

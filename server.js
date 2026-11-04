@@ -3,6 +3,7 @@
  * Serves the built frontend, admin panel, and all API routes.
  * Usage: node server.js
  */
+import 'dotenv/config'
 import express from 'express'
 import path from 'path'
 import fs from 'fs'
@@ -22,12 +23,22 @@ const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
 const app = express()
-const PORT = process.env.PORT || 3000
+const parsedPort = Number.parseInt(process.env.PORT || '', 10)
+const PORT = Number.isInteger(parsedPort) && parsedPort > 0 ? parsedPort : 3000
 const DIST_DIR = path.join(__dirname, 'dist')
-const UPLOADS_DIR = path.join(__dirname, 'uploads')
+// Serverless platforms only allow writes under /tmp; local and Node hosts use ./uploads.
+const UPLOADS_DIR = process.env.UPLOADS_DIR
+  ? path.resolve(process.env.UPLOADS_DIR)
+  : process.env.VERCEL
+    ? path.join('/tmp', 'portfolio-uploads')
+    : path.join(__dirname, 'uploads')
 
 // Ensure uploads directory exists
-if (!fs.existsSync(UPLOADS_DIR)) fs.mkdirSync(UPLOADS_DIR, { recursive: true })
+try {
+  if (!fs.existsSync(UPLOADS_DIR)) fs.mkdirSync(UPLOADS_DIR, { recursive: true })
+} catch (err) {
+  console.warn('[Uploads] Could not create upload directory:', err.message)
+}
 
 // ─── Middleware ───────────────────────────────────────────────────────────────
 app.use(cors({ origin: true, credentials: true }))
@@ -40,22 +51,28 @@ app.use('/uploads', express.static(UPLOADS_DIR, { maxAge: '1d' }))
 // ─── API Routes ───────────────────────────────────────────────────────────────
 
 // Existing APIs (contact form + chatbot)
-app.post('/api/contact', async (req, res) => {
-  res.status = (code) => { res.statusCode = code; return res }
-  res.json = (data) => { res.setHeader('Content-Type', 'application/json'); res.end(JSON.stringify(data)); return res }
-  return contactHandler(req, res)
-})
+app.post('/api/contact', contactHandler)
+app.post('/api/chat', chatHandler)
 
-app.post('/api/chat', async (req, res) => {
-  res.status = (code) => { res.statusCode = code; return res }
-  res.json = (data) => { res.setHeader('Content-Type', 'application/json'); res.end(JSON.stringify(data)); return res }
-  return chatHandler(req, res)
+// Health/diagnostic endpoint (no secrets)
+app.get('/api/health', (req, res) => {
+  res.json({
+    status: 'ok',
+    database: 'sqlite',
+    time: new Date().toISOString(),
+  })
 })
 
 // CMS API routes
 app.use('/api/public', publicRoutes)
 app.use('/api/admin', authRoutes)
 app.use('/api/admin', adminRoutes)
+
+// Unmatched API routes must return JSON, never the SPA HTML.
+// This must stay after the routers above, otherwise it swallows them.
+app.use('/api', (req, res) => {
+  res.status(404).json({ error: `API route not found: ${req.method} ${req.originalUrl}` })
+})
 
 // ─── Static: Built frontend ───────────────────────────────────────────────────
 if (fs.existsSync(DIST_DIR)) {

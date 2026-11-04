@@ -7,8 +7,17 @@ import { fileURLToPath } from 'url'
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
-const UPLOADS_DIR = path.join(__dirname, '..', '..', 'uploads')
-if (!fs.existsSync(UPLOADS_DIR)) fs.mkdirSync(UPLOADS_DIR, { recursive: true })
+// Serverless platforms only allow writes under /tmp; local and Node hosts use ./uploads.
+const UPLOADS_DIR = process.env.UPLOADS_DIR
+  ? path.resolve(process.env.UPLOADS_DIR)
+  : process.env.VERCEL
+    ? path.join('/tmp', 'portfolio-uploads')
+    : path.join(__dirname, '..', '..', 'uploads')
+try {
+  if (!fs.existsSync(UPLOADS_DIR)) fs.mkdirSync(UPLOADS_DIR, { recursive: true })
+} catch (err) {
+  console.warn('[Uploads] Could not create upload directory:', err.message)
+}
 
 const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/svg+xml', 'image/gif']
 const ALLOWED_DOC_TYPES = ['application/pdf', 'image/jpeg', 'image/png']

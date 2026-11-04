@@ -19,8 +19,11 @@ export default function Education() {
     ...fallbackEducation,
     degree: firstEdu.degree || fallbackEducation.degree,
     institution: firstEdu.institution || fallbackEducation.institution,
-    duration: (firstEdu.start_date && firstEdu.end_date)
-      ? `${firstEdu.start_date} – ${firstEdu.is_current ? 'Present' : firstEdu.end_date}`
+    campus: firstEdu.campus || fallbackEducation.campus,
+    cgpa: firstEdu.cgpa || null,
+    field: firstEdu.field_of_study || null,
+    duration: firstEdu.start_date
+      ? `${firstEdu.start_date} – ${firstEdu.is_current ? 'Present' : (firstEdu.end_date || 'Present')}`
       : fallbackEducation.duration,
     status: firstEdu.status_label || fallbackEducation.status,
     description: firstEdu.description || fallbackEducation.description,
@@ -50,7 +53,7 @@ export default function Education() {
                 <div>
                   <div className="flex flex-wrap items-center gap-2">
                     <span className="rounded-full bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-700 dark:bg-indigo-500/15 dark:text-indigo-300">
-                      Bachelor of Science
+                      {data.field || 'Software Engineering'}
                     </span>
                     <span className="rounded-full bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-600 dark:text-emerald-400">
                       {data.status}
@@ -63,6 +66,9 @@ export default function Education() {
                     <Building2 size={16} />
                     {data.institution}
                   </p>
+                  {data.campus && (
+                    <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">{data.campus}</p>
+                  )}
                   <p className="mt-3 max-w-2xl text-sm leading-relaxed text-slate-600 dark:text-slate-400">
                     {data.description}
                   </p>
@@ -76,11 +82,11 @@ export default function Education() {
                 </div>
                 <div className="flex items-center gap-2 text-xs font-medium text-slate-700 dark:text-slate-300">
                   <Layers size={14} className="text-indigo-500" />
-                  <span>8 Academic Semesters</span>
+                  <span>{data.cgpa ? `CGPA: ${data.cgpa}` : 'Software Engineering'}</span>
                 </div>
                 <div className="flex items-center gap-2 text-xs font-medium text-emerald-600 dark:text-emerald-400">
                   <Star size={14} />
-                  <span>Actively Enrolled</span>
+                  <span>{firstEdu?.is_current ? 'Currently Enrolled' : 'Qualification'}</span>
                 </div>
               </div>
             </div>

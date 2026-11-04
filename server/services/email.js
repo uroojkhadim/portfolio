@@ -32,19 +32,37 @@ export function isEmailConfigured() {
   return Boolean(process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS)
 }
 
+/** Details for the admin dashboard (never exposes credentials). */
+export function getEmailServiceInfo() {
+  const configured = isEmailConfigured()
+  return {
+    configured,
+    provider: configured ? 'smtp' : null,
+    host: configured ? process.env.SMTP_HOST : null,
+    from: configured ? (process.env.SMTP_FROM || process.env.SMTP_USER) : null,
+    notifyTo: configured ? (process.env.NOTIFY_EMAIL || process.env.ADMIN_EMAIL || process.env.SMTP_USER) : null,
+    reason: configured ? null : 'Set SMTP_HOST, SMTP_USER and SMTP_PASS to enable email notifications.',
+  }
+}
+
 /**
  * Send an email notification to admin when a new contact form message is received.
- * Non-blocking, fails gracefully without throwing.
+ * Never throws; returns an explicit delivery result.
  */
 export async function sendNewMessageNotification(messageRecord) {
   try {
     const transporter = getTransporter()
     if (!transporter) {
-      return { sent: false, reason: 'SMTP not configured' }
+      console.warn('[Email Service] SMTP is not configured — notification skipped.')
+      return { sent: false, reason: 'not_configured' }
     }
 
     const recipient = process.env.NOTIFY_EMAIL || process.env.ADMIN_EMAIL || process.env.SMTP_USER
     const fromAddress = process.env.SMTP_FROM || process.env.SMTP_USER
+
+    if (!recipient || !fromAddress) {
+      return { sent: false, reason: 'not_configured' }
+    }
 
     const subject = `[Portfolio Contact] New message from ${messageRecord.name}: ${messageRecord.subject}`
     const text = `You have received a new contact message on your portfolio:\n\n` +
@@ -83,7 +101,7 @@ export async function sendNewMessageNotification(messageRecord) {
     return { sent: true, messageId: info.messageId }
   } catch (err) {
     console.error('[Email Service] Failed to send notification email:', err.message)
-    return { sent: false, error: err.message }
+    return { sent: false, reason: 'send_failed', error: err.message }
   }
 }
 
@@ -94,7 +112,7 @@ export async function sendNewMessageNotification(messageRecord) {
 export async function sendReplyEmail({ to, subject, replyBody }) {
   const transporter = getTransporter()
   if (!transporter) {
-    throw new Error('SMTP email service is not configured on the server. Please check SMTP environment variables.')
+    throw new Error('SMTP email service is not configured on the server. Add SMTP_HOST, SMTP_USER and SMTP_PASS to your environment.')
   }
 
   const fromAddress = process.env.SMTP_FROM || process.env.SMTP_USER

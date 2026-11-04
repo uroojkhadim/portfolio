@@ -155,6 +155,6 @@ ${notificationText}
 Message ${id} is securely stored in persistent messages.json.
 To activate live WhatsApp alerts on your phone, configure WHATSAPP_TOKEN + WHATSAPP_PHONE_NUMBER_ID or CALLMEBOT_API_KEY.`)
 
-  updateMessageNotificationStatus(id, 'not_configured_logged')
-  return { success: true, provider: 'logged_to_server', note: 'Credentials pending in env' }
+  updateMessageNotificationStatus(id, 'not_configured')
+  return { success: false, reason: 'not_configured', note: 'No WhatsApp provider credentials are configured.' }
 }

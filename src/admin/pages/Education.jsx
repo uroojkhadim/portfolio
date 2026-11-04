@@ -10,6 +10,7 @@ const EMPTY_EDU = {
   institution: '',
   degree: '',
   field_of_study: '',
+  campus: '',
   start_date: '',
   end_date: '',
   is_current: false,
@@ -150,6 +151,16 @@ export default function Education() {
                   type="text"
                   value={modal.data.field_of_study || ''}
                   onChange={e => handleChange('field_of_study', e.target.value)}
+                  className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-900 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                />
+              </div>
+              <div>
+                <label className="mb-1.5 block text-xs font-semibold text-slate-700 dark:text-slate-300">Campus</label>
+                <input
+                  type="text"
+                  value={modal.data.campus || ''}
+                  onChange={e => handleChange('campus', e.target.value)}
+                  placeholder="e.g. Vehari Campus"
                   className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-900 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
                 />
               </div>
@@ -302,7 +313,9 @@ export default function Education() {
                   <h3 className="text-base font-bold text-slate-900 dark:text-white">{edu.degree}</h3>
                   <p className="text-sm font-medium text-indigo-600 dark:text-indigo-400">{edu.institution}</p>
                   <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                    {edu.start_date} - {edu.is_current ? 'Present' : edu.end_date} {edu.field_of_study && `• ${edu.field_of_study}`}
+                    {edu.start_date} - {edu.is_current ? 'Present' : edu.end_date}
+                    {edu.campus ? ` • ${edu.campus}` : ''}
+                    {edu.field_of_study ? ` • ${edu.field_of_study}` : ''}
                   </p>
                 </div>
                 <div className="flex flex-col items-end gap-1.5">

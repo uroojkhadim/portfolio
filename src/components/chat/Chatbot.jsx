@@ -12,9 +12,8 @@ import {
   ChevronDown,
 } from 'lucide-react'
 import { SUGGESTED_QUESTIONS, getKnowledgeBaseAnswer } from '../../data/chatbotKnowledge'
-import { personalInfo } from '../../data/personal'
-import { cvLinks } from '../../data/cv'
 import { useNavigation } from '../../context/NavigationContext'
+import { usePortfolioData } from '../../context/DataContext'
 
 function renderMarkdown(text, navigateTo) {
   // Simple, safe Markdown parser for links, bold, and line breaks
@@ -52,16 +51,16 @@ function renderMarkdown(text, navigateTo) {
           </button>
         )
       }
+      const external = /^https?:/i.test(part.href)
       return (
         <a
           key={index}
           href={part.href}
-          target="_blank"
-          rel="noopener noreferrer"
+          {...(external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
           className="inline-flex items-center gap-0.5 font-semibold text-indigo-600 underline hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300"
         >
           {part.label}
-          <ExternalLink size={11} className="inline" />
+          {external && <ExternalLink size={11} className="inline" />}
         </a>
       )
     }
@@ -80,12 +79,18 @@ function renderMarkdown(text, navigateTo) {
 
 export default function Chatbot() {
   const { navigateTo } = useNavigation()
+  const portfolio = usePortfolioData()
   const [isOpen, setIsOpen] = useState(false)
+  const greeting = portfolio?.chatbotConfig?.greeting
+    || `Hello! I'm **Urooj Khadim's portfolio assistant**. I can answer questions about her skills, services, projects, experience, education, or how to contact her.\n\nHow can I help you today?`
+  const suggestions = portfolio?.chatbotConfig?.suggestions?.length
+    ? portfolio.chatbotConfig.suggestions
+    : SUGGESTED_QUESTIONS
   const [messages, setMessages] = useState([
     {
       id: 'welcome',
       sender: 'bot',
-      text: `Hello! I'm **Urooj Khadim's Portfolio AI Assistant**. I can answer any questions about her projects, skills, full-stack experience, Flutter applications, or how to contact her.\n\nHow can I help you today?`,
+      text: greeting,
       timestamp: new Date(),
     },
   ])
@@ -156,7 +161,7 @@ export default function Chatbot() {
       } catch {
         data = {}
       }
-      const botReply = data.reply || getKnowledgeBaseAnswer(query, messages)
+      const botReply = data.reply || getKnowledgeBaseAnswer(query, messages, portfolio)
 
       setMessages((prev) => [
         ...prev,
@@ -170,7 +175,7 @@ export default function Chatbot() {
     } catch (err) {
       console.warn('Backend API request fell back to verified client-side knowledge engine:', err)
       // Instant intelligent knowledge-base fallback (guarantees 100% uptime)
-      const fallbackReply = getKnowledgeBaseAnswer(query, messages)
+      const fallbackReply = getKnowledgeBaseAnswer(query, messages, portfolio)
       setMessages((prev) => [
         ...prev,
         {
@@ -185,12 +190,24 @@ export default function Chatbot() {
     }
   }
 
+  // Keep the welcome bubble in sync when CMS settings finish loading.
+  useEffect(() => {
+    setMessages(prev => {
+      if (prev.length === 1 && prev[0].id === 'welcome' && prev[0].text !== greeting) {
+        return [{ ...prev[0], text: greeting }]
+      }
+      return prev
+    })
+  }, [greeting])
+
+  if (portfolio?.chatbotConfig?.enabled === false) return null
+
   const handleClearChat = () => {
     setMessages([
       {
         id: 'welcome-reset',
         sender: 'bot',
-        text: `Chat reset. Ask me anything about Urooj's Flutter projects, web applications, technical skills, or background!`,
+        text: greeting,
         timestamp: new Date(),
       },
     ])
@@ -333,7 +350,7 @@ export default function Chatbot() {
                 <Star size={11} className="text-indigo-500" /> Suggested queries:
               </p>
               <div className="flex gap-1.5 overflow-x-auto pb-1 no-scrollbar">
-                {SUGGESTED_QUESTIONS.map((question) => (
+                {suggestions.map((question) => (
                   <button
                     key={question}
                     onClick={() => handleSendMessage(question)}

@@ -12,6 +12,9 @@ import About from './pages/About'
 import Contact from './pages/Contact'
 import Settings from './pages/Settings'
 import Messages from './pages/Messages'
+import Personal from './pages/Personal'
+import Services from './pages/Services'
+import ChatbotKnowledge from './pages/ChatbotKnowledge'
 import AdminLayout from './components/AdminLayout'
 import LoadingSpinner from './components/LoadingSpinner'
 
@@ -45,6 +48,9 @@ function AdminRouter() {
   const renderPage = () => {
     switch (route) {
       case 'dashboard': return <Dashboard />
+      case 'personal': return <Personal />
+      case 'services': return <Services />
+      case 'chatbot': return <ChatbotKnowledge />
       case 'messages': return <Messages />
       case 'projects': return <Projects />
       case 'skills': return <Skills />
