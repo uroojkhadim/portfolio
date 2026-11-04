@@ -1,4 +1,8 @@
-import { loadPortfolioKnowledge, answerPortfolioQuestion } from '../server/services/portfolioKnowledge.js'
+import {
+  answerPortfolioQuestion,
+  buildSystemInstruction,
+  loadPortfolioKnowledge,
+} from '../server/services/portfolioKnowledge.js'
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {

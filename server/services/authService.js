@@ -1,6 +1,6 @@
 import bcrypt from 'bcryptjs'
 import db from '../db.js'
-import { signToken } from '../middleware/auth.js'
+import { isAuthConfigured, signToken } from '../middleware/auth.js'
 import { checkRateLimit, recordAttempt, clearLoginAttempts } from '../middleware/rateLimiter.js'
 
 /**
@@ -8,6 +8,10 @@ import { checkRateLimit, recordAttempt, clearLoginAttempts } from '../middleware
  * Enforces rate limiting (max 5 attempts per 15 minutes per IP).
  */
 export async function authenticateAdmin({ email, password, clientIp = '127.0.0.1' }) {
+  if (!isAuthConfigured()) {
+    return { status: 503, error: 'Admin authentication is not configured.' }
+  }
+
   if (!email || !password) {
     return { status: 400, error: 'Email and password are required.' }
   }
@@ -51,19 +55,10 @@ export async function authenticateAdmin({ email, password, clientIp = '127.0.0.1
   }
 
   // 4. Fallback verification against server-side configured admin credentials (e.g. on serverless/Vercel)
-  const configuredEmail = (process.env.ADMIN_EMAIL || 'uroojkhadim505@gmail.com').trim().toLowerCase()
-  if (cleanEmail === configuredEmail) {
-    const configuredHash = process.env.ADMIN_PASSWORD_HASH
-    const defaultPassword = process.env.ADMIN_DEFAULT_PASSWORD || 'khadim123'
-
-    let valid = false
-    if (configuredHash) {
-      valid = bcrypt.compareSync(password, configuredHash)
-    } else {
-      valid = password === defaultPassword || bcrypt.compareSync(password, bcrypt.hashSync(defaultPassword, 10))
-    }
-
-    if (valid) {
+  const configuredEmail = process.env.ADMIN_EMAIL?.trim().toLowerCase()
+  const configuredHash = process.env.ADMIN_PASSWORD_HASH
+  if (configuredEmail && configuredHash && cleanEmail === configuredEmail) {
+    if (bcrypt.compareSync(password, configuredHash)) {
       clearLoginAttempts(clientIp)
       const token = signToken({ id: 1, email: configuredEmail, name: 'Urooj Khadim' })
       return {

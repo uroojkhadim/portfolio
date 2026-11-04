@@ -9,7 +9,7 @@
       "destination": "/admin.html"
     },
     {
-      "source": "/((?!admin|api/|cv/|images/|icons/|uploads/|.*\\..*).*)",
+      "source": "/((?!admin|api(?:/|$)|cv/|images/|icons/|uploads/|.*\\..*).*)",
       "destination": "/index.html"
     }
   ],

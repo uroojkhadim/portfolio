@@ -31,6 +31,7 @@ export default function AdminLayout({ children, currentRoute, onNavigate }) {
   const { theme, toggle } = useThemeAdmin()
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [unreadCount, setUnreadCount] = useState(0)
+  const [messageStatsError, setMessageStatsError] = useState('')
 
   useEffect(() => {
     let mounted = true
@@ -39,9 +40,12 @@ export default function AdminLayout({ children, currentRoute, onNavigate }) {
         .then(data => {
           if (mounted && data && typeof data.unread === 'number') {
             setUnreadCount(data.unread)
+            setMessageStatsError('')
           }
         })
-        .catch(() => {})
+        .catch(error => {
+          if (mounted) setMessageStatsError(error.message || 'Could not load message counts.')
+        })
     }
 
     fetchUnread()
@@ -167,6 +171,11 @@ export default function AdminLayout({ children, currentRoute, onNavigate }) {
 
         {/* Page Content */}
         <main className="flex-1 overflow-y-auto p-4 sm:p-6">
+          {messageStatsError && (
+            <div role="alert" className="mb-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-900 dark:bg-amber-950/30 dark:text-amber-300">
+              Message counts are unavailable: {messageStatsError}
+            </div>
+          )}
           {children}
         </main>
       </div>

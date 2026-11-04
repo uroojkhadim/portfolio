@@ -92,15 +92,6 @@ const CREATE_FREELANCE_TABLES = `
   );
 `
 
-const MIGRATE_PROJECTS = `
-  -- Give the existing projects table the dual-portfolio visibility columns so
-  -- legacy content keeps working unchanged.
-  ALTER TABLE projects ADD COLUMN show_in_career INTEGER DEFAULT 1;
-  ALTER TABLE projects ADD COLUMN show_in_freelance INTEGER DEFAULT 1;
-  UPDATE projects SET show_in_career = CASE published WHEN 1 THEN 1 ELSE 0 END;
-  UPDATE projects SET show_in_freelance = CASE published WHEN 1 THEN 1 ELSE 0 END;
-`
-
 function patchFreelanceTables(db) {
   const tables = db.prepare(
     "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' ORDER BY name"
@@ -122,14 +113,19 @@ function patchFreelanceTables(db) {
   }
 
   if (!tables.includes('projects')) {
-    db.exec(MIGRATE_PROJECTS)
-    console.log('[DB] Created projects visibility columns')
-  } else if (
-    !tables.includes('show_in_career') ||
-    !tables.includes('show_in_freelance')
-  ) {
-    db.exec(MIGRATE_PROJECTS)
-    console.log('[DB] Patched projects visibility columns')
+    throw new Error('Cannot migrate project visibility columns: projects table is missing.')
+  }
+
+  const projectColumns = cols('projects', db)
+  if (!projectColumns.includes('show_in_career')) {
+    db.exec('ALTER TABLE projects ADD COLUMN show_in_career INTEGER DEFAULT 1')
+    db.exec('UPDATE projects SET show_in_career = CASE published WHEN 1 THEN 1 ELSE 0 END')
+    console.log('[DB] Added projects.show_in_career')
+  }
+  if (!projectColumns.includes('show_in_freelance')) {
+    db.exec('ALTER TABLE projects ADD COLUMN show_in_freelance INTEGER DEFAULT 1')
+    db.exec('UPDATE projects SET show_in_freelance = CASE published WHEN 1 THEN 1 ELSE 0 END')
+    console.log('[DB] Added projects.show_in_freelance')
   }
 
   const existingFilter = db

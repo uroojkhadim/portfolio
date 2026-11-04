@@ -39,7 +39,7 @@ function periodLabel(item) {
 }
 export function loadPortfolioKnowledge() {
   const chatRouteOverrides = db
-    .prepare('SELECT route, answer, suggested_questions, greeting FROM chatbot_routes WHERE enabled = 1 ORDER BY id ASC')
+    .prepare('SELECT route, suggested_questions, greeting FROM chatbot_routes WHERE enabled = 1 ORDER BY id ASC')
     .all()
   const about = db.prepare('SELECT * FROM about_content LIMIT 1').get() || {}
   const contactRows = db.prepare(
@@ -412,4 +412,68 @@ function detectIntent(rawQuery) {
   if (includesAny(q, ['who is', 'about urooj', 'about her', 'introduce', 'background', 'tell me about', 'who are you'])) return 'about'
   return 'unknown'
 }
-ex
+
+export function answerPortfolioQuestion(rawQuery, history = [], knowledge = loadPortfolioKnowledge()) {
+  const query = String(rawQuery || '').toLowerCase().trim()
+  if (!query) {
+    return 'Ask me about Urooj’s skills, services, projects, experience, education, or how to contact her.'
+  }
+
+  const previousQuestion = [...history].reverse().find((item) => {
+    const role = item?.role || item?.sender
+    const text = item?.content || item?.text
+    return role === 'user' && typeof text === 'string' && text.trim()
+  })
+  const contextualQuery = previousQuestion && includesAny(query, ['more', 'that', 'those', 'it', 'details', 'explain'])
+    ? `${previousQuestion.content || previousQuestion.text} ${query}`
+    : query
+  const intent = detectIntent(contextualQuery)
+  const project = findProject(contextualQuery, knowledge)
+
+  if (project && (intent === 'projects' || intent === 'unknown')) {
+    return formatProjectDetails(project)
+  }
+
+  const customAnswer = customKnowledgeAnswer(contextualQuery, knowledge)
+  if (customAnswer) return customAnswer
+
+  switch (intent) {
+    case 'greeting':
+      return `Hello! I’m ${knowledge.about.name || 'Urooj Khadim'}’s portfolio assistant. I can tell you about her skills, services, projects, experience, education, and how to contact her.`
+    case 'thanks':
+      return 'You’re welcome! Let me know if you would like to know anything else about Urooj’s portfolio.'
+    case 'hiring':
+      return hiringAnswer(knowledge)
+    case 'services':
+      return servicesAnswer(knowledge)
+    case 'contact':
+      return contactAnswer(knowledge)
+    case 'documents':
+      return documentsAnswer(knowledge)
+    case 'certificates':
+      return certificatesAnswer(knowledge)
+    case 'experience':
+      return experienceAnswer(knowledge)
+    case 'education':
+      return educationAnswer(knowledge)
+    case 'projects':
+      return projectsAnswer(contextualQuery, knowledge)
+    case 'skills':
+      return skillsAnswer(contextualQuery, knowledge)
+    case 'about':
+      return aboutAnswer(knowledge)
+    default: {
+      const skills = knowledge.skillGroups.flatMap((group) => group.skills).slice(0, 12)
+      const services = knowledge.services.map((service) => service.title)
+      return [
+        'I don’t have that specific detail in Urooj’s published portfolio, but I can help with:',
+        `- **Role:** ${knowledge.about.role || knowledge.about.title || 'Software developer'}`,
+        `- **Skills:** ${skills.length ? skills.join(', ') : 'Not listed'}`,
+        `- **Projects:** ${knowledge.projects.length} published projects`,
+        `- **Services:** ${services.length ? services.join(', ') : 'Not listed'}`,
+        `- **Contact:** ${contactLine(knowledge, 'email') || 'Contact details are not published yet'}`,
+        'Ask about any of these topics for more details.',
+      ].join('\n')
+    }
+  }
+}

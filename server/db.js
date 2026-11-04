@@ -58,8 +58,7 @@ try {
   } catch {}
 } catch (dbErr) {
   console.error('[DB] Failed to open SQLite database:', dbErr.message)
-  // Fallback in-memory DB so app won't crash on serverless
-  db = new Database(':memory:')
+  throw new Error(`Failed to open SQLite database at ${DB_PATH}: ${dbErr.message}`)
 }
 
 // ─── Schema ──────────────────────────────────────────────────────────────────
@@ -282,15 +281,22 @@ ensureColumn('contact_messages', 'notification_error', 'TEXT')
 // ─── Seed Data ────────────────────────────────────────────────────────────────
 
 function seedDatabase() {
-  // Admin user (credentials can be overridden by environment variables)
-  const adminEmail = (process.env.ADMIN_EMAIL || 'uroojkhadim505@gmail.com').trim().toLowerCase()
-  const existingAdmin = db.prepare('SELECT id FROM admin_users WHERE email = ?').get(adminEmail)
-  if (!existingAdmin) {
-    const hash = bcrypt.hashSync(process.env.ADMIN_DEFAULT_PASSWORD || 'khadim123', 12)
-    db.prepare('INSERT INTO admin_users (email, password_hash, name) VALUES (?, ?, ?)').run(
-      adminEmail, hash, 'Urooj Khadim'
-    )
-    console.log('[DB] Admin user created.')
+  const adminEmail = process.env.ADMIN_EMAIL?.trim().toLowerCase()
+  const existingAdmin = adminEmail
+    ? db.prepare('SELECT id FROM admin_users WHERE email = ?').get(adminEmail)
+    : null
+  if (adminEmail && !existingAdmin) {
+    const configuredHash = process.env.ADMIN_PASSWORD_HASH
+    const password = process.env.ADMIN_DEFAULT_PASSWORD
+    const hash = configuredHash || (password ? bcrypt.hashSync(password, 12) : null)
+    if (hash) {
+      db.prepare('INSERT INTO admin_users (email, password_hash, name) VALUES (?, ?, ?)').run(
+        adminEmail, hash, 'Urooj Khadim'
+      )
+      console.log('[DB] Admin user created from server configuration.')
+    } else {
+      console.warn('[DB] Admin user was not seeded: configure ADMIN_PASSWORD_HASH or ADMIN_DEFAULT_PASSWORD.')
+    }
   }
 
   // Site Settings

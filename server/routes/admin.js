@@ -23,36 +23,57 @@ function safeParseJson(str, fallback = []) {
   try { return JSON.parse(str) } catch { return fallback }
 }
 
-function safeCount(table, where = '') {
-  try {
-    const q = where ? `SELECT COUNT(*) as c FROM ${table} WHERE ${where}` : `SELECT COUNT(*) as c FROM ${table}`
-    return db.prepare(q).get()?.c || 0
-  } catch {
-    return 0
+function countRows(table, where = '') {
+  const query = where
+    ? `SELECT COUNT(*) as count FROM ${table} WHERE ${where}`
+    : `SELECT COUNT(*) as count FROM ${table}`
+  return db.prepare(query).get().count
+}
+
+function getDashboardStats(segment = 'all') {
+  const projectFilter = segment === 'all' ? '' : `show_in_${segment}=1`
+  const whereProjects = (condition) => [projectFilter, condition].filter(Boolean).join(' AND ')
+  const totalProjects = countRows('projects', projectFilter)
+  const publishedProjects = countRows('projects', whereProjects('published=1'))
+
+  return {
+    total_projects: totalProjects,
+    published_projects: publishedProjects,
+    total_skills: countRows('skills'),
+    total_experience: countRows('experience'),
+    total_education: countRows('education'),
+    total_documents: countRows('documents'),
+    published_documents: countRows('documents', 'published=1'),
+    total_certificates: countRows('certificates'),
+    total_services: countRows('services'),
+    total_chatbot_entries: countRows('chatbot_knowledge'),
+    unpublished_projects: totalProjects - publishedProjects,
+    total_messages: countRows('contact_messages'),
+    unread_messages: countRows('contact_messages', "status='unread'"),
   }
 }
 
 // ─── Dashboard Stats ──────────────────────────────────────────────────────────
 router.get('/stats', (req, res) => {
   try {
-    const stats = {
-      total_projects: safeCount('projects'),
-      published_projects: safeCount('projects', 'published=1'),
-      total_skills: safeCount('skills'),
-      total_experience: safeCount('experience'),
-      total_education: safeCount('education'),
-      total_documents: safeCount('documents'),
-      published_documents: safeCount('documents', 'published=1'),
-      total_certificates: safeCount('certificates'),
-      total_services: safeCount('services'),
-      total_chatbot_entries: safeCount('chatbot_knowledge'),
-      unpublished_projects: safeCount('projects', 'published=0'),
-      total_messages: safeCount('contact_messages'),
-      unread_messages: safeCount('contact_messages', "status='unread'"),
-    }
-    res.json(stats)
+    res.json(getDashboardStats())
   } catch (err) {
-    res.status(500).json({ error: err.message })
+    console.error('[Admin API] Dashboard stats failed:', err)
+    res.status(500).json({ error: 'Failed to load dashboard statistics.' })
+  }
+})
+
+router.get('/stats/:segment', (req, res) => {
+  const segment = String(req.params.segment || '').toLowerCase()
+  if (!['career', 'freelance'].includes(segment)) {
+    return res.status(400).json({ error: 'segment must be either career or freelance.' })
+  }
+
+  try {
+    res.json(getDashboardStats(segment))
+  } catch (err) {
+    console.error(`[Admin API] ${segment} dashboard stats failed:`, err)
+    res.status(500).json({ error: 'Failed to load dashboard statistics.' })
   }
 })
 

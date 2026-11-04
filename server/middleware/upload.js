@@ -20,7 +20,13 @@ try {
 }
 
 const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/svg+xml', 'image/gif']
-const ALLOWED_DOC_TYPES = ['application/pdf', 'image/jpeg', 'image/png']
+const ALLOWED_DOC_TYPES = [
+  'application/pdf',
+  'application/msword',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  'image/jpeg',
+  'image/png',
+]
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {

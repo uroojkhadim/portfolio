@@ -74,12 +74,11 @@ Open `http://localhost:3000` and `http://localhost:3000/admin`.
 
 ### Admin login
 
-The first run seeds the admin account from `ADMIN_EMAIL` and `ADMIN_DEFAULT_PASSWORD` in `.env`. Change both, and set a unique `JWT_SECRET`, before exposing the site publicly.
-
-```
-ADMIN_EMAIL=uroojkhadim505@gmail.com
-ADMIN_DEFAULT_PASSWORD=khadim123
-```
+The first run seeds an admin account only when `ADMIN_EMAIL` and either
+`ADMIN_DEFAULT_PASSWORD` or `ADMIN_PASSWORD_HASH` are configured. For hosted
+deployments, prefer a bcrypt `ADMIN_PASSWORD_HASH` and a unique `JWT_SECRET`
+with at least 32 characters. There are no built-in admin credentials or JWT
+signing-key fallbacks.
 
 ---
 
@@ -145,7 +144,14 @@ This is the only setup where the inbox, CMS edits, and uploads are fully durable
 
 > **Important persistence limitation:** Vercel's filesystem is read-only except `/tmp`, and `/tmp` is per-instance and ephemeral. On Vercel the database is copied to `/tmp/portfolio-data` and uploads go to `/tmp/portfolio-uploads`. Contact messages, CMS edits, and uploaded files can disappear on a cold start and are not shared between instances. The local `server/data/portfolio.db` is git-ignored, so your local content is not shipped either — the deployed instance starts from the seed data.
 >
-> Use Vercel for a read-only/seed-content preview only. For a working CMS inbox in production, deploy to a host with a persistent disk or migrate storage to a hosted database and object storage.
+> Vercel also serves `/uploads/*` as static deployment files, not from a function's `/tmp` directory, so files uploaded at runtime are not reliably viewable. Function request/response size limits also restrict large uploads. Use Vercel only for a read-only/seed-content preview; for a working CMS, deploy to a host with persistent storage or migrate the database and uploads to hosted database/object storage.
+
+The admin API routes are served through `api/admin/[...route].js`; login and
+session verification remain explicit functions. Configure `JWT_SECRET`
+(minimum 32 characters), `ADMIN_EMAIL`, and `ADMIN_PASSWORD_HASH` in the
+deployment environment. `ADMIN_DEFAULT_PASSWORD` is supported for local
+database seeding only. `vercel.json` excludes `/api/*` from the portfolio SPA
+fallback so API failures remain API responses rather than `index.html`.
 
 ---
 

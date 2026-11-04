@@ -1,37 +1,46 @@
 import { useState, useEffect } from 'react'
-import { useAuth } from '../context/AuthContext'
+import {
+  Award, Bot, Box, Briefcase, Cpu, FileQuestion, FolderKanban, Inbox,
+  MailOpen, Wrench,
+} from 'lucide-react'
 import { useApi } from '../hooks/useApi'
 import LoadingSpinner from '../components/LoadingSpinner'
 
 export default function Dashboard() {
   const { get } = useApi()
-  const { user } = useAuth()
   const [stats, setStats] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [segment, setSegment] = useState('all')
 
-  // Load stats with a route-aware fallback so the route-scoped CMS panels work.
-  // Tries /api/admin/stats, then /api/admin/stats/career, then /api/admin/stats/freelance.
-  const load = () => {
-    setLoading(true)
-    const seg = segment === 'all' ? '' : '/' + segment
-    const tryPath = () =>
-      fetch('/api/admin/stats' + seg, { headers: { Authorization: 'Bearer ' + user.token } })
-        .then(r => (r.status === 404 ? null : r.json()))
+  useEffect(() => {
+    let active = true
+    const load = (showLoading = false) => {
+      if (showLoading) setLoading(true)
+      const endpoint = segment === 'all' ? '/api/admin/stats' : `/api/admin/stats/${segment}`
+      get(endpoint)
         .then(data => {
-          if (data && data.error) throw new Error(data.error)
+          if (!active) return
           setStats(data)
           setError('')
         })
-        .catch(() => get('/api/admin/stats'))
-        .catch(err => setError(err.message || 'Could not load dashboard statistics'))
-    tryPath()
-    // Poll every 30s so stats refresh when messages arrive
-    setInterval(tryPath, 30000)
-  }
+        .catch(err => {
+          if (!active) return
+          setStats(null)
+          setError(err.message || 'Could not load dashboard statistics.')
+        })
+        .finally(() => {
+          if (active) setLoading(false)
+        })
+    }
 
-  useEffect(() => { load() }, [])
+    load(true)
+    const interval = setInterval(() => load(), 30000)
+    return () => {
+      active = false
+      clearInterval(interval)
+    }
+  }, [segment])
 
   if (loading) return <LoadingSpinner size="lg" />
 
@@ -78,9 +87,9 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {error && <div className="text-sm text-rose-600 dark:text-rose-400">{error}</div>}
+      {error && <div role="alert" className="rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700 dark:border-rose-900 dark:bg-rose-950/30 dark:text-rose-300">{error}</div>}
 
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
+      {!error && <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
         <StatCard label="Total Projects" value={stats?.total_projects} icon={FolderKanban} color="indigo" />
         <StatCard label="Total Skills" value={stats?.total_skills} icon={Cpu} color="violet" />
         <StatCard label="Experience Entries" value={stats?.total_experience} icon={Briefcase} color="emerald" />
@@ -91,7 +100,7 @@ export default function Dashboard() {
         <StatCard label="Chatbot Entries" value={stats?.total_chatbot_entries} icon={Bot} color="violet" />
         <StatCard label="Published Projects" value={stats?.published_projects} icon={Box} color="emerald" />
         <StatCard label="Unpublished Projects" value={stats?.unpublished_projects} icon={FileQuestion} color="amber" />
-      </div>
+      </div>}
     </div>
   )
 }

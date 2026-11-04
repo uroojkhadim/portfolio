@@ -1,5 +1,11 @@
 import app from '../server.js'
 
+export const config = {
+  api: {
+    bodyParser: false,
+  },
+}
+
 export default function handler(req, res) {
   // Normalize req.url for Express routing on Vercel
   if (req.query && req.query.route) {
